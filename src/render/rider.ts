@@ -27,6 +27,8 @@ export class Rider {
   private readonly armF: THREE.Group;
   private readonly armR: THREE.Group;
   private cr = 0;
+  /** body roll as a critically damped spring (docs/research 11): smooth lean, no snapping */
+  private rollV = 0;
 
   constructor() {
     this.root.add(this.roll);
@@ -60,8 +62,12 @@ export class Rider {
 
   update(p: RiderPose, dt: number): void {
     // roll: heel edge (+) puts the +x (heel) side down → negative rotation about the board axis
-    // riders angulate (knees, hips): the body leans less than the board's edge angle
-    this.roll.rotation.z += (-0.75 * p.edge - this.roll.rotation.z) * Math.min(1, dt * 14);
+    // riders angulate (knees, hips): the body leans less than the board's edge angle.
+    // Critically damped spring, half-life ~0.1 s: the lean flows from one turn into the next.
+    const target = -0.75 * p.edge, w = 14, x = this.roll.rotation.z - target;
+    const decay = Math.exp(-w * dt), v = this.rollV;
+    this.roll.rotation.z = target + (x + (v + w * x) * dt) * decay;
+    this.rollV = (v - w * (v + w * x) * dt) * decay;
     this.cr += (p.crouch - this.cr) * Math.min(1, dt * (p.crouch < this.cr ? 14 : 7));
     const c = this.cr;
     this.legF.scale.y = this.legR.scale.y = 1 - 0.36 * c;

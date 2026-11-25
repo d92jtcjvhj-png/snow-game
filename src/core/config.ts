@@ -75,8 +75,8 @@ export const APPROACH = {
   /** shortest line the rider can squeeze (m) */
   S_MIN: 6,
   /**
-   * Widest offset from the kicker axis (m): 1.5 m + 0.4 m·power (wide, gentle arcs: the peak lateral
-   * acceleration 4π²·offset/S_TIME² stays under the edge grip, ~1.2 g, so the S never skids). Coaches use the same entry line for
+   * Widest offset from the kicker axis (m): 1.5 m + 0.4 m·power. Sine-shaped S: peak lateral
+   * acceleration 2π²·offset/S_TIME² ≈ 0.6 g, well under the edge grip, so the S never skids. Coaches use the same entry line for
    * every spin (docs/research 09): the S barely grows, the spin size comes from the shoulders (Phase 3).
    * Same length for every power, so the right moment to start is the same for every spin.
    */
