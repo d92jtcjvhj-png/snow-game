@@ -11,5 +11,7 @@ Ogni affermazione ha la sua fonte. Molte pagine erano bloccate dalla rete della 
 | `04-deriva-laterale-coaching.md` | Curva troppo profonda o fuori tempo, quindi stacco in diagonale (fonti di coaching) |
 | `05-deriva-laterale-fisica.md` | Fisica: Δψ = s/R, deriva = v·sin Δψ·T, limiti di presa, momento angolare |
 | `06-tempismo-curva.md` | Quando iniziare la curva d'impostazione; effetti di presto e tardi |
+| `07-linea-di-approccio.md` | **Report**: la linea vista dall'alto (forma, scostamento 1–2 m, inizio 25–40 m prima del labbro), presa a 55–75 km/h, quanto frena uno speed check |
+| `07a-note-geometria-linea.md`, `07b-note-presa-e-speed-check.md` | Note di base del report 07 |
 
 Una ricerca sull'atterraggio fuori linea (quando si salva e quando si cade) è stata interrotta: va rifatta prima della Fase 3.
