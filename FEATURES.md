@@ -60,12 +60,14 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
   - arriva **parallela all'asse e centrata proprio al labbro**;
   - dall'ultimo cambio di spigolo il rider si mette progressivamente sulla lamina di stacco e la **tiene visibilmente su tutto il kicker** (15° + 15° × potenza, fino a 30°).
 - ✅ **Più carica = linea più larga**: scostamento massimo dall'asse 0,5 m + 1 m × potenza, cioè ~1,5 m a carica piena (ricerca: 1–2 m nel big air). Archi di raggio ~30–50 m, ~1 g laterale: a quelle velocità il carving puro sulla sciancratura è impossibile.
-- ✅ Il rider **segue la linea** prevista, sia in posizione sia in direzione: se la potenza cambia mentre la curva è in corso (tastiera, o dito che trascina ancora), la linea si adatta e torna comunque in asse al labbro.
+- ✅ Il rider **segue la linea** prevista, sia in posizione sia in direzione: se la potenza cambia mentre la curva è in corso (tastiera, o dito che trascina ancora), la linea si adatta e torna comunque in asse alla fine della S.
 - ✅ Durata naturale della linea: **2 s fino al labbro** alla velocità del momento (~40 m a 72 km/h; ricerca: 25–40 m). La fascia gialla è nello stesso punto di prima.
-- ✅ **Tempismo** (finestra "giusto": ±0,2 s):
-  - **giusto**: uscita dritta e centrata, errore ~0°;
-  - **presto**: la linea finisce prima del labbro e il rider continua a curvare sulla lamina di stacco ("gira troppo sul kicker"). Presto di 0,35 s: 5° e 3 m di deriva. Presto di 0,6 s: 6,5° e 4,3 m. Presto di 1 s: 8° e 5,6 m;
-  - **tardi**: la S si schiaccia vicino al kicker. Derapata, meno velocità; pop e aiuto alla rotazione calano in modo graduale (tardi di 0,35 s: 93%; 0,7 s: 86%; 1,2 s: 76%).
+- ✅ **Il labbro taglia la linea dove capita** (ricerca `docs/research/08`): la linea ha lunghezza fissa dall'inizio della carica e il rider non la adatta al kicker. **Punto di stacco, angolo d'uscita e lamina dipendono solo da quando inizi a caricare** e da quanto carichi (S più larga = effetto più forte).
+- ✅ **Tempismo** (finestra "giusto": ±0,2 s), frontside 100%:
+  - **giusto**: la S finisce al labbro: centro, dritto, sulla lamina di stacco;
+  - **presto**: la S finisce prima e il rider continua a curvare sulla lamina di stacco: esce in diagonale nel verso dello spin. Presto di 0,25 / 0,5 / 1 s: +3 / +6 / +8°, fino a 1,5 m dal centro, deriva 2–5 m;
+  - **tardi**: il labbro cade dentro la S, quindi esce di traverso contro lo spin. Tardi di 0,25 / 0,5 s: −2 / −6°. Tardi di 0,75 s: sei a metà del cambio di lamina, base piatta, pop al 75%. Tardi di 1 s: ancora largo, 1,5 m di lato;
+  - uscire di lato non vuol dire cadere: il giudizio dell'atterraggio arriva in Fase 3.
 - ✅ **Rilascio prima del kicker** = carica annullata: il rider si raddrizza.
 
 ## A5. Stacco e volo
@@ -120,11 +122,11 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
 - ❌ Suoni: da fare.
 
 ## A9. Test e deploy
-- ✅ 27 test Vitest headless:
+- ✅ 29 test Vitest headless:
   - `snow`: sciancratura, anisotropia, presa limitata, derapata;
   - `board`: rettilineo, curva, traverso, speed check, determinismo;
   - `bigair`: geometria FIS, mesh uguale al collider, velocità e sweet spot, riproducibilità;
-  - `approach`: giusto, presto, tardi, potenza, frontside/heel, backside/toe, straight e flip piatti, niente pop senza rilascio;
+  - `approach`: giusto, presto, tardi (verso opposto), molto tardi (lamina non settata), potenza, frontside/heel, backside/toe, straight e flip piatti, niente pop senza rilascio;
   - `loop`.
 - ✅ GitHub Actions: typecheck + test + build a ogni push; deploy su GitHub Pages da `main`.
 - ⚠️ Il bundle è grande (~1,8 MB gzip), soprattutto per il WASM di Rapier: da ottimizzare.

@@ -9,12 +9,15 @@ import { smoothstep } from './vec';
  * set-up carve on the opposite edge brings him back, and the return arc on the takeoff edge carries
  * up the kicker ("carve up and off the lip") and arrives parallel to the axis, centred, at the lip.
  *
- * The rider has a natural line length L = v·S_TIME (to the lip). Timing:
- *  - on time: the line ends exactly at the lip → straight, centred takeoff on the right edge;
- *  - early:   the line ends before the lip; the rider keeps carving on the takeoff edge ("turning too
- *             much in the lip") → leaves on an angle → sideways drift in the air;
- *  - late:    the same S squeezed into the space left → curvature beyond the edge's grip → skid,
- *             speed loss, rushed edge change, less pop.
+ * The line has a fixed length L = v·S_TIME from the moment the charge starts: the rider does NOT
+ * adapt it to the kicker. The lip simply cuts the line wherever it falls (docs/research 08), so the
+ * takeoff point across the lip, the exit angle and the edge depend only on when the charge starts
+ * (and on the power, which sets how wide the S is):
+ *  - on time: the lip falls at the end of the S → centred, straight, on the takeoff edge;
+ *  - early:   the S is over before the lip; the rider keeps carving on the takeoff edge ("turning
+ *             too much in the lip") → leaves on the side the S swung out to, on an angle → drift;
+ *  - late:    the lip falls inside the S → still off to the side and still on the set-up curve:
+ *             board across the kicker, maybe on the wrong edge (less pop, less rotation help).
  */
 export type ApproachPhase = 'none' | 'setup' | 'hold';
 
@@ -35,7 +38,7 @@ export class Approach {
   /** + = started early, − = late (s); 0 when not started */
   timing = 0;
   compressed = false;
-  /** takeoff quality from the timing (0.6..1): a squeezed S = rushed edge change, skid, less pop */
+  /** kept for the takeoff record; the timing now acts through position, angle and edge at the lip */
   quality = 1;
   /** heading the rider intends to have now (rad) */
   psiRef = 0;
@@ -62,10 +65,11 @@ export class Approach {
     const vv = Math.max(3, v);
     this.Lnat = Math.max(APPROACH.S_MIN, vv * APPROACH.S_TIME);
     this.kLim = (APPROACH.GRIP_USE * SNOW.MU_LAT_EDGE * aN) / (vv * vv);
-    this.compressed = dToLip < this.Lnat;
-    this.L = this.compressed ? Math.max(APPROACH.S_MIN, dToLip) : this.Lnat;
+    // fixed length: the lip cuts the line wherever it falls (no squeezing to fit the kicker)
+    this.compressed = false;
+    this.L = this.Lnat;
     this.timing = (dToLip - this.Lnat) / vv;
-    this.quality = 0.6 + 0.4 * Math.min(1, this.L / this.Lnat);
+    this.quality = 1;
   }
 
   stop(): void {

@@ -66,11 +66,21 @@ describe('automatic pre-jump carve (the player never steers)', () => {
     expect(ld.inLanding).toBe(true);
   });
 
-  it('too late: squeezed S → rushed edge change, skid, less pop and speed', () => {
-    const ok = jump(0.8, 0), late = jump(0.8, -1.0);
+  it('too late: the lip cuts the S — the rider exits on an angle the other way than when early', () => {
+    const early = jump(0.8, 0.5), late = jump(0.8, -0.5);
     expect(late.tk.timingLabel).toBe('tardi');
-    expect(late.tk.popQ).toBeLessThan(ok.tk.popQ - 0.15);
-    expect(late.tk.speed).toBeLessThan(ok.tk.speed);
+    expect(Math.abs(late.tk.headingDeg)).toBeGreaterThan(3);
+    expect(Math.sign(late.tk.headingDeg)).toBe(-Math.sign(early.tk.headingDeg));
+  });
+
+  it('much too late: still in the middle of the edge change at the lip → no takeoff edge set, less pop', () => {
+    const { tk } = jump(1, -0.75);
+    expect(tk.edge).not.toBe(tk.edgeExpected);
+    expect(tk.popQ).toBeLessThan(0.9);
+  });
+
+  it('more power = bigger effect of a timing error', () => {
+    expect(Math.abs(jump(1, -0.5).tk.headingDeg)).toBeGreaterThan(Math.abs(jump(0.4, -0.5).tk.headingDeg) * 1.3);
   });
 
   it('more power = wider set-up line: ~1.5 m off the axis at full power (research: 1–2 m)', () => {
