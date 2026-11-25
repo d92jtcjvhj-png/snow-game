@@ -80,9 +80,9 @@ export const APPROACH = {
   LINE_GAIN: 0.15,
   /** on the ramp the edge is a platform: tiny residual curvature (1/m) */
   RAMP_CURV: 1 / 2000,
-  /** platform edge angle on the ramp: 8° + 10°·power */
-  RAMP_EDGE: 8 * DEG,
-  RAMP_EDGE_GAIN: 10 * DEG,
+  /** platform edge angle on the ramp, clearly visible: 15° + 15°·power (the S hands over onto it) */
+  RAMP_EDGE: 15 * DEG,
+  RAMP_EDGE_GAIN: 15 * DEG,
   /** timing tolerance shown as "on time" (s) */
   ON_TIME: 0.2,
 } as const;

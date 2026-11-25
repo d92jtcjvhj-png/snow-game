@@ -56,7 +56,7 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
   - frontside: tallone → punta (curva d'impostazione verso il lato del kicker) → tallone;
   - backside: lo stesso, a specchio;
   - finisce dritta, in linea, alla base del kicker;
-  - sulla rampa la lamina resta solo come piattaforma.
+  - dall'ultimo cambio di spigolo il rider si mette progressivamente sulla lamina di stacco e la **tiene visibilmente su tutto il kicker** (15° + 15° × potenza, fino a 30°), senza curvare: è la piattaforma da cui stacca.
 - ✅ **S fluida, in carving pulito**:
   - la lamina passa da un lato all'altro in modo continuo;
   - nel punto più stretto la S usa il 70% della presa disponibile alla velocità di quel momento, quindi se il tempismo è giusto non derapa mai;
@@ -106,7 +106,7 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
 - ✅ Spruzzo di neve in derapata e nello speed check; il numero di particelle dipende dalla qualità.
 - ✅ Kicker leggermente azzurro, linea blu sul labbro, linea rossa sul knuckle, tacche ogni 5 m.
 - ✅ Bordi blu dell'atterraggio, bandierine, reti arancioni, cancello di partenza.
-- ✅ Camera dietro sul lato punta, che si sposta di lato in volo e inquadra rider e atterraggio previsto.
+- ✅ Camera laterale sul lato punta, un po' dietro, come nel legacy: si leggono bene lamina e inclinazione. Resta sempre almeno 2 m sopra la neve, anche sul drop-in a 35°. In volo si allontana e inquadra rider e atterraggio previsto.
 - ✅ **Qualità adattiva**:
   - livelli low / medium / high: pixel ratio 1 / 1,5 / 2; ombre solo high; alberi 90 / 150 / 220; particelle 60 / 150 / 260;
   - scende se il frame resta > 20 ms per 2 s, sale se resta < 12 ms per 5 s.

@@ -30,7 +30,7 @@ async function main() {
   const spray = new Spray(260);
   gfx.scene.add(spray.points);
   const markers = new Markers(gfx.scene);
-  const cam = new FollowCamera();
+  const cam = new FollowCamera(heightAt);
   const assist = loadAssist();
   const input = new Input();
   const controls = createControls(hudRoot, input);
