@@ -4,43 +4,127 @@ Legenda: ✅ funziona · ⚠️ presente nel codice ma non raggiungibile / non u
 
 # Parte A — Nuovo motore (`src/`)
 
-Stato: **Fase 1, scheletro**. Il gioco vero è ancora solo nel legacy (Parte B).
+Stato: **Fase 2, la tavola e tutto ciò che porta allo stacco** su un big air FIS. Rotazioni, grab, trick e giudizio dell'atterraggio arrivano in Fase 3. Il prototipo completo resta nel legacy (Parte B).
+Le ricerche su cui si basa la fisica sono in `docs/research/`.
 
 ## A1. Stack e struttura
 - ✅ Vite 8 + TypeScript strict + three `0.187.0` + `@dimforge/rapier3d-compat 0.21.0`, versioni pinnate esatte.
-- ✅ Cartelle `src/core`, `src/physics`, `src/world`, `src/render`, `src/ui`.
+- ✅ Cartelle `src/core`, `src/physics`, `src/world`, `src/render`, `src/ui`; `physics` non importa three.
 - ✅ Regole di progetto in `CLAUDE.md`.
 
-## A2. Fisica
-- ✅ Rapier inizializzato (WASM incluso nel bundle), gravità 9,81.
-- ✅ Loop a passo fisso 1/120 s con accumulatore, limite di 0,05 s per frame e interpolazione al render.
-- ✅ Pendio piano a 15° (collider box), attrito neve μ 0,06.
-- ✅ Cubo da ~75 kg che scivola sul pendio, con una leggera rotazione iniziale. Torna in cima quando arriva in fondo.
-- ❌ Attrito anisotropo, curva sulla lamina, drag per posa, rider, kicker: da fare.
+## A2. Salto: big air FIS (`src/world/bigair.ts`)
+- ✅ Profilo parametrico (distanze orizzontali):
+  - drop-in 70 m a 35°;
+  - approccio a 12°, dove si fanno speed check e curva;
+  - set-up point piano alla base del kicker.
+- ✅ Kicker a transizione circolare (R 30 m) con labbro a 28°, alto 4 m, largo 7 m, fianchi a 45°.
+- ✅ Gap/tavolo di 24 m, knuckle arrotondato, atterraggio a 38° lungo 28 m, uscita e run-out.
+- ✅ Larghezze: run-in ±10 m; atterraggio da ±9 m (in cima) a ±13 m (in fondo); oltre, neve fresca che sale.
+- ✅ Mesh three e collider trimesh di Rapier nascono dalla stessa griglia h(x, z).
+- ✅ Velocità tarate sui dati reali:
+  - senza speed check si stacca a ~62 km/h e si atterra lunghi (~18 m dopo il knuckle);
+  - con ~8 m di speed check si stacca a ~56 km/h e si atterra 6 m dopo il knuckle, con 2,4 s di volo.
 
-## A3. Grafica
-- ✅ Stile low-poly cartoon: flat shading, palette del legacy, abeti e montagne low-poly con seed fisso, nebbia.
-- ✅ Luce emisferica + sole; ombre reali solo in qualità *high*.
-- ✅ Camera che segue il cubo dall'alto di lato, con smorzamento.
+## A3. Fisica della neve (`src/physics`)
+- ✅ Loop a passo fisso 1/120 s con interpolazione, deterministico.
+- ✅ **Contatto con la neve**: vincolo nostro, esatto, sulla superficie analitica h(x, z).
+  - Il contatto di Rapier sui triangoli perdeva energia a caso: la velocità allo stacco cambiava fino a 6 km/h.
+  - Rapier integra il corpo; le collisioni con oggetti (rail, reti) arriveranno con lui.
+- ✅ **Attrito anisotropo**:
+  - longitudinale μ 0,06;
+  - laterale da 0,12 (base piatta) a 1,0 (lamina ≥ 20°);
+  - oltre il limite di presa la tavola **derapa** (μ 0,6) e perde velocità.
+- ✅ **Curva sulla lamina**:
+  - curvatura limitata dalla presa: v²κ ≤ μ·a_n;
+  - lamina = inclinazione del rider, atan(a_lat/a_n), da 200°/s;
+  - R = R_sciancratura·cos φ, con sciancratura 8 m.
+- ✅ Carico normale con la curvatura del terreno: transizione del kicker, uscita dell'atterraggio.
+- ✅ Resistenza aerodinamica ½ρCdA v², CdA 0,5 (0,38 quando ti accucci per caricare).
+- ✅ **Speed check analogico**:
+  - la tavola va di traverso fino a 80° × intensità, sulla lamina di tallone;
+  - la neve frena lungo la direzione di marcia, quindi lo speed check non devia mai;
+  - toglie ~6 km/h ogni 8 m a pieno.
+- ✅ **Il giocatore non sterza mai.** Quando non c'è una curva, il rider riporta la tavola in linea con la marcia.
+
+## A4. Curva automatica pre-salto (`src/physics/approach.ts`)
+- ✅ **Parte quando inizi a caricare** e il lato della carica è deciso.
+- ✅ **Lamina di stacco reale** (rider regular, tabella `TAKEOFF_EDGE`):
+  - frontside → tallone (heel);
+  - backside → punta (toe);
+  - straight air e flip dritti → base piatta, senza curva.
+- ✅ **S reale**, con curvatura nulla all'inizio e alla fine:
+  - frontside: tallone → punta (curva d'impostazione verso il lato del kicker) → tallone;
+  - backside: lo stesso, a specchio;
+  - finisce dritta, in linea, alla base del kicker;
+  - sulla rampa la lamina resta solo come piattaforma.
+- ✅ **Più carica = S più ampia**: angolo massimo 3° + 6° × potenza.
+- ✅ Durata naturale della S: 2,4 s alla velocità del momento. Prima della rampa il rider corregge la linea a occhio; sulla rampa non può più.
+- ✅ **Tempismo**:
+  - **giusto** (±0,35 s): uscita dritta, errore ≤ 1°, deriva < 1 m;
+  - **presto**: la S finisce prima, il rider si mette sulla lamina di stacco e carva di traverso. Esce in diagonale (5–8°) e deriva di 3–7 m in volo. Uscire di lato non vuol dire cadere;
+  - **tardi**: S schiacciata, curvatura oltre la presa, derapata, meno velocità. Il pop e l'aiuto della curva alla rotazione calano fino al 60%.
+- ✅ **Rilascio prima del kicker** = carica annullata: il rider si raddrizza.
+
+## A5. Stacco e volo
+- ✅ **Pop** come nel legacy: rilascio entro 0,18 s dal labbro = perfetto, poi cala.
+  - Perfetto vale 1,2 m/s lungo la normale della rampa.
+  - È ridotto se la tavola derapa o se stacchi sulla lamina sbagliata.
+- ✅ Volo balistico vero, con resistenza dell'aria e direzione reale, quindi con la deriva laterale.
+- ✅ **Scheda di stacco**:
+  - trick e carica;
+  - velocità allo stacco;
+  - pop;
+  - lamina di stacco, giusta o sbagliata;
+  - inizio curva, presto o tardi di quanti secondi;
+  - direzione allo stacco;
+  - deriva in volo;
+  - punto d'atterraggio rispetto al knuckle (anche "sul tavolo");
+  - tempo in aria;
+  - impatto (caduta equivalente);
+  - aiuto della curva alla rotazione.
+- ❌ Rotazioni in aria, grab, trick, giudizio dell'atterraggio, cadute: Fase 3.
+- ❌ Switch e cab: la tabella delle lamine li prevede, ma il rider va sempre in avanti.
+- ❌ Ollie / hop sull'approccio: nel legacy c'erano, qui il rilascio prima del kicker annulla la carica.
+
+## A6. Comandi
+- ✅ **Telefono**:
+  - pollice sinistro libero: tieni premuto per iniziare la carica e la curva, trascina di lato per verso e potenza (barra con tacche 25/50/75/100% e vibrazione), stacca per il pop;
+  - a destra, sulla neve: **pad speed check** (tieni premuto e trascina giù = più forte) e levetta dell'asse su/giù (per ora decide solo flip → base piatta).
+- ✅ **Tastiera**: Z/X carica (sinistra/destra), Spazio carica dritta, B speed check (sale in 0,6 s), ↑/↓ asse, R riprova, Invio = Gioca.
+
+## A7. Grafica
+- ✅ Stile low-poly cartoon: flat shading, palette del legacy, abeti e montagne con seed fisso, nebbia.
+- ✅ Rider a blocchi portato dal legacy: nose giallo e tail viola, petto bianco sul lato punta.
+  - Si inclina con la lamina e la tavola rolla con lui.
+  - Carica le spalle in senso opposto al verso, proporzionalmente alla carica.
+  - Si accoscia; braccia aperte in aria.
+- ✅ Spruzzo di neve in derapata e nello speed check; il numero di particelle dipende dalla qualità.
+- ✅ Kicker leggermente azzurro, linea blu sul labbro, linea rossa sul knuckle, tacche ogni 5 m.
+- ✅ Bordi blu dell'atterraggio, bandierine, reti arancioni, cancello di partenza.
+- ✅ Camera dietro sul lato punta, che si sposta di lato in volo e inquadra rider e atterraggio previsto.
 - ✅ **Qualità adattiva**:
-  - Livelli low / medium / high: pixel ratio 1 / 1,5 / 2, ombre off / off / on.
-  - Livello iniziale scelto dal dispositivo.
-  - Scende se il frame resta > 20 ms per 2 s; sale se resta < 12 ms per 5 s.
-  - L'antialias è deciso solo all'avvio.
+  - livelli low / medium / high: pixel ratio 1 / 1,5 / 2; ombre solo high; alberi 90 / 150 / 220; particelle 60 / 150 / 260;
+  - scende se il frame resta > 20 ms per 2 s, sale se resta < 12 ms per 5 s.
+- ❌ Animazioni del rider più ricche, tracce sulla neve, effetti in aria.
 
-## A4. Interfaccia e comandi
-- ✅ HUD: velocità km/h, fps, livello di qualità, bottone **Reset** (anche tasto **R**).
-- ❌ Menu, comandi di gioco, suoni: da fare.
+## A8. Interfaccia e allenamento
+- ✅ Intro con i comandi, HUD (km/h, lamina heel/toe con gradi, fps e qualità), barra di carica con "Frontside 80% · stacco di tallone".
+- ✅ Messaggi contestuali: "Carica ora!", "Troppo presto!", "Tardi!", "Stacca il pollice sul labbro".
+- ✅ ⚙ Allenamento, salvato in localStorage:
+  - **Indicatori**: fascia gialla sulla neve che indica dove iniziare a caricare alla velocità attuale, e anello del punto d'atterraggio previsto;
+  - **Rallentatore in aria**.
+- ✅ Schermata "gira il telefono in verticale".
+- ❌ Suoni: da fare.
 
-## A5. Test e deploy
-- ✅ Test Vitest headless (`tests/cube-slope.test.ts`):
-  - il cubo scende, non attraversa il pendio, non dà NaN;
-  - l'accelerazione corrisponde a g(sin α − μ cos α);
-  - la simulazione è deterministica;
-  - il reset funziona;
-  - il loop fa i passi giusti.
-- ✅ GitHub Actions: typecheck + test + build a ogni push; deploy su GitHub Pages a ogni push su `main`.
-- ⚠️ Il bundle è grande (~4,9 MB, 1,8 MB gzip): Rapier compat include il WASM in base64. Da ottimizzare più avanti.
+## A9. Test e deploy
+- ✅ 25 test Vitest headless:
+  - `snow`: sciancratura, anisotropia, presa limitata, derapata;
+  - `board`: rettilineo, curva, traverso, speed check, determinismo;
+  - `bigair`: geometria FIS, mesh uguale al collider, velocità e sweet spot, riproducibilità;
+  - `approach`: giusto, presto, tardi, potenza, frontside/heel, backside/toe, straight e flip piatti, niente pop senza rilascio;
+  - `loop`.
+- ✅ GitHub Actions: typecheck + test + build a ogni push; deploy su GitHub Pages da `main`.
+- ⚠️ Il bundle è grande (~1,8 MB gzip), soprattutto per il WASM di Rapier: da ottimizzare.
 
 ---
 
