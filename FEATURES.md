@@ -108,7 +108,7 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
 - ✅ Spruzzo di neve in derapata e nello speed check; il numero di particelle dipende dalla qualità.
 - ✅ Kicker leggermente azzurro, linea blu sul labbro, linea rossa sul knuckle, tacche ogni 5 m.
 - ✅ Bordi blu dell'atterraggio, bandierine, reti arancioni, cancello di partenza.
-- ✅ Camera laterale sul lato punta, un po' dietro, come nel legacy: si leggono bene lamina e inclinazione. **Mira sempre al rider**, a terra e in volo, con un piccolo anticipo nella direzione di marcia; in volo lo segue più da vicino e più veloce, così resta in quadro anche in verticale sul telefono. Resta sempre almeno 2 m sopra la neve.
+- ✅ Camera laterale sul lato punta, un po' dietro, come nel legacy: si leggono bene lamina e inclinazione. **Inquadratura rigida**: stessa posizione rispetto al rider a terra e in volo, mira esattamente su di lui e lo segue quasi senza ritardo, così durante il salto l'inquadratura non oscilla. Resta sempre almeno 2 m sopra la neve.
 - ✅ **Qualità adattiva**:
   - livelli low / medium / high: pixel ratio 1 / 1,5 / 2; ombre solo high; alberi 90 / 150 / 220; particelle 60 / 150 / 260;
   - scende se il frame resta > 20 ms per 2 s, sale se resta < 12 ms per 5 s.
