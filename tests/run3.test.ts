@@ -50,6 +50,20 @@ describe('a whole jump (Phase 3)', () => {
     expect(ld.quality).not.toBe('crash');
   });
 
+  it('the off-axis stick counts even if it is let go before the release (latched during the charge)', () => {
+    run.reset();
+    let started = false;
+    while (run.phase !== 'done' && run.t < 40) {
+      const p = run.board.position(), v = run.board.speed();
+      if (!started && p.z > 66 && (LM.zLip - p.z) / v <= APPROACH.S_TIME) started = true;
+      const charging = started && p.z < LM.zLip - 1.5;
+      // stick up only for a moment in the middle of the charge
+      const axis = charging && p.z > 110 && p.z < 115 ? 1 : 0;
+      run.step({ charging, charge: charging ? 0.5 : 0, axis, brake: p.z > 60 && p.z < 66 ? 1 : 0, grab: run.phase === 'air' && run.airT > 0.1 && run.airT < 1 ? 'indy' : null });
+    }
+    expect(run.landing!.trick).toMatch(/Cork/);
+  });
+
   it('after a crash the rider stops', () => {
     jump(1, 9);
     expect(['crash', 'severe', 'sketchy']).toContain(run.landing!.quality);

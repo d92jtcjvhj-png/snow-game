@@ -27,7 +27,9 @@ export function trickName(sp: SpinState, switchTakeoff: boolean): TrickInfo {
       parts.push(switchTakeoff ? (sp.dir > 0 ? 'Cab' : 'Switch Backside') : sp.dir > 0 ? 'Frontside' : 'Backside');
       if (sp.tiltType !== 'flat' && sp.inv > 0) {
         const fam = { cork: 'Cork', misty: 'Misty', rodeo: 'Rodeo', flat: '' }[sp.tiltType];
-        parts.push(MULT(sp.inv) + fam);
+        // pros' rule: at most one inversion fewer than the rotations (double cork 1080, quint cork 2160)
+        const inv = Math.min(sp.inv, Math.max(1, Math.ceil(deg / 360) - 1));
+        parts.push(MULT(inv) + fam);
       }
       parts.push(String(deg));
     }
