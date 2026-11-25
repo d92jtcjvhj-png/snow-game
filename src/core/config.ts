@@ -62,14 +62,18 @@ export const BOARD = {
  */
 export const APPROACH = {
   /** natural duration of the S at the speed the charge starts (s): starting this long before the kicker base is "on time" */
-  S_TIME: 2.4,
+  S_TIME: 1.5,
   /** shortest S the rider can squeeze (m) */
   S_MIN: 4,
-  /** max heading of the S: 3° + 6°·power */
-  PSI_MIN: 3 * DEG,
-  PSI_GAIN: 6 * DEG,
+  /**
+   * Size of the S: its sharpest point uses this fraction of the edge grip available at the speed the
+   * charge starts (a clean carve, never a skid when on time). Power scales it from POWER_MIN to 1.
+   * At 60–75 km/h a real set-up turn is gentle (radius 20–100 m, docs/research 05).
+   */
+  GRIP_USE: 0.7,
+  POWER_MIN: 0.4,
   /** after an early S, the rider keeps carving on the takeoff edge at this fraction of the S's last curvature */
-  HOLD_EARLY: 0.8,
+  HOLD_EARLY: 1.3,
   /** ...fading out over this distance (m): the heading error stays, the turning stops */
   HOLD_LEN: 8,
   /** line correction before the ramp: extra curvature per radian of heading error (1/m/rad) */
@@ -80,7 +84,7 @@ export const APPROACH = {
   RAMP_EDGE: 8 * DEG,
   RAMP_EDGE_GAIN: 10 * DEG,
   /** timing tolerance shown as "on time" (s) */
-  ON_TIME: 0.35,
+  ON_TIME: 0.2,
 } as const;
 
 /** Charge / pop (legacy CFG). */

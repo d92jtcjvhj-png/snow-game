@@ -1,4 +1,4 @@
-import { APPROACH } from '../core/config';
+import { APPROACH, SNOW } from '../core/config';
 import { edgeForCurvature } from './snow';
 import { smoothstep } from './vec';
 
@@ -41,11 +41,16 @@ export class Approach {
   quality = 1;
   /** heading the rider intends to have now (rad): integral of the planned curvature */
   psiRef = 0;
+  /** curvature the edge can hold cleanly at the start speed (1/m), scaled by GRIP_USE */
+  kLim = 0;
   private s0 = 0;
   private sLast = 0;
 
-  /** Start the S. `dToBase`: distance still to ride to the kicker base (m); `s`: path length so far. */
-  start(side: -1 | 1, dToBase: number, v: number, s: number): void {
+  /**
+   * Start the S. `dToBase`: distance still to ride to the kicker base (m); `s`: path length so far;
+   * `aN`: normal acceleration now (grip available).
+   */
+  start(side: -1 | 1, dToBase: number, v: number, s: number, aN = 9.6): void {
     this.active = true;
     this.side = side;
     this.s0 = s;
@@ -53,10 +58,12 @@ export class Approach {
     this.psiRef = 0;
     const vv = Math.max(3, v);
     this.Lnat = Math.max(APPROACH.S_MIN, vv * APPROACH.S_TIME);
+    this.kLim = (APPROACH.GRIP_USE * SNOW.MU_LAT_EDGE * aN) / (vv * vv);
     this.compressed = dToBase < this.Lnat;
     this.L = this.compressed ? Math.max(APPROACH.S_MIN, dToBase) : this.Lnat;
     this.timing = (dToBase - this.Lnat) / vv;
-    this.quality = 0.6 + 0.4 * Math.min(1, this.L / this.Lnat / 0.6);
+    // graded: the more the S is squeezed, the more rushed the edge change
+    this.quality = 0.6 + 0.4 * Math.min(1, this.L / this.Lnat);
   }
 
   stop(): void {
@@ -82,11 +89,13 @@ export class Approach {
   }
 
   private plan(s: number, onRamp: boolean, power: number, v: number, aN: number): ApproachCmd {
-    const psi = APPROACH.PSI_MIN + APPROACH.PSI_GAIN * power;
     const u = (s - this.s0) / this.L;
     // heading ψ(u) = side·A·(sin 2πu − ½ sin 4πu): curvature 0 at both ends, back on the line at u = 1;
-    // curvature ∝ cos 2πu − cos 4πu: takeoff edge (short) → opposite edge (the set-up carve) → takeoff edge
-    const A = psi / 1.3;
+    // curvature ∝ cos 2πu − cos 4πu: takeoff edge (short) → opposite edge (the set-up carve) → takeoff edge.
+    // The amplitude is sized on the natural length: its sharpest point (|cos 2πu − cos 4πu| = 2) uses
+    // GRIP_USE of the grip. Squeezed into a shorter L (late), the same S asks for more than the edge holds.
+    const scale = APPROACH.POWER_MIN + (1 - APPROACH.POWER_MIN) * power;
+    const A = (this.kLim * this.Lnat * scale) / (4 * Math.PI);
     const k0 = (this.side * A * 2 * Math.PI) / this.L;
     if (u < 1) {
       const kappa = k0 * (Math.cos(2 * Math.PI * u) - Math.cos(4 * Math.PI * u));
@@ -96,7 +105,7 @@ export class Approach {
       // set up too early: nothing left to do, the rider rolls onto the takeoff edge and starts carving
       // across the approach (pre-rotating): he will leave the lip on an angle
       const extra = s - this.s0 - this.L;
-      const kappa = 2 * k0 * APPROACH.HOLD_EARLY * smoothstep(extra / 4) * Math.exp(-extra / APPROACH.HOLD_LEN);
+      const kappa = this.side * this.kLim * APPROACH.HOLD_EARLY * smoothstep(extra / 4) * Math.exp(-extra / APPROACH.HOLD_LEN);
       return { kappa, edge: edgeForCurvature(kappa, v, aN), phase: 'hold' };
     }
     const edge = this.side * (APPROACH.RAMP_EDGE + APPROACH.RAMP_EDGE_GAIN * power);

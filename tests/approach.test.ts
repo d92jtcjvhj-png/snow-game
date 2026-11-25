@@ -58,7 +58,7 @@ describe('automatic pre-jump carve (the player never steers)', () => {
   });
 
   it('too late: squeezed S → rushed edge change, skid, less pop and speed', () => {
-    const ok = jump(0.8, 0), late = jump(0.8, -1.8);
+    const ok = jump(0.8, 0), late = jump(0.8, -1.0);
     expect(late.tk.timingLabel).toBe('tardi');
     expect(late.tk.popQ).toBeLessThan(ok.tk.popQ - 0.15);
     expect(late.tk.speed).toBeLessThan(ok.tk.speed);

@@ -1,5 +1,5 @@
 import type RAPIER from '@dimforge/rapier3d-compat';
-import { DEG, POP, SNOW, START_Z, STEP, TAKEOFF_EDGE, type TrickKind } from '../core/config';
+import { APPROACH, DEG, POP, SNOW, START_Z, STEP, TAKEOFF_EDGE, type TrickKind } from '../core/config';
 import { Approach, type ApproachPhase } from '../physics/approach';
 import { Board } from '../physics/board';
 import { dragK } from '../physics/snow';
@@ -138,7 +138,7 @@ export class Run {
         // the set-up carve starts as soon as the charge has a side
         if (!this.approach.active && this.power > 0) {
           const side = inp.charge > 0 ? 1 : -1;
-          this.approach.start(side, BA.kickerBase - p0.z, v, this.s);
+          this.approach.start(side, BA.kickerBase - p0.z, v, this.s, b.aN);
         }
       }
       if (released && this.chargeOn) {
@@ -215,7 +215,7 @@ export class Run {
       edge: actual,
       edgeExpected: exp,
       timing: this.approach.active ? this.approach.timing : null,
-      timingLabel: this.approach.active ? (this.approach.timing > 0.35 ? 'presto' : this.approach.timing < -0.35 ? 'tardi' : 'giusto') : null,
+      timingLabel: this.approach.active ? (this.approach.timing > APPROACH.ON_TIME ? 'presto' : this.approach.timing < -APPROACH.ON_TIME ? 'tardi' : 'giusto') : null,
       compressed: this.approach.compressed,
       headingDeg: travel / DEG,
       vLat: vel.x,

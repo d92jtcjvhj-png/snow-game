@@ -57,12 +57,17 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
   - backside: lo stesso, a specchio;
   - finisce dritta, in linea, alla base del kicker;
   - sulla rampa la lamina resta solo come piattaforma.
-- ✅ **Più carica = S più ampia**: angolo massimo 3° + 6° × potenza.
-- ✅ Durata naturale della S: 2,4 s alla velocità del momento. Prima della rampa il rider corregge la linea a occhio; sulla rampa non può più.
-- ✅ **Tempismo**:
-  - **giusto** (±0,35 s): uscita dritta, errore ≤ 1°, deriva < 1 m;
-  - **presto**: la S finisce prima, il rider si mette sulla lamina di stacco e carva di traverso. Esce in diagonale (5–8°) e deriva di 3–7 m in volo. Uscire di lato non vuol dire cadere;
-  - **tardi**: S schiacciata, curvatura oltre la presa, derapata, meno velocità. Il pop e l'aiuto della curva alla rotazione calano fino al 60%.
+- ✅ **S fluida, in carving pulito**:
+  - la lamina passa da un lato all'altro in modo continuo;
+  - nel punto più stretto la S usa il 70% della presa disponibile alla velocità di quel momento, quindi se il tempismo è giusto non derapa mai;
+  - a velocità alta la S è più dolce, come nella realtà (raggi 20–100 m);
+  - **più carica = S più ampia** (dal 40% al 100% di quell'ampiezza) e lamina più inclinata (fino a ~40°);
+  - lo scostamento laterale è piccolo (~0,2–0,4 m): a queste velocità una curva d'impostazione vera è appena accennata.
+- ✅ Durata naturale della S: **1,5 s** alla velocità del momento (~30 m a 75 km/h): si carica ~2,2 s prima del labbro. Prima della rampa il rider corregge la linea a occhio; sulla rampa non può più.
+- ✅ **Tempismo** (finestra "giusto": ±0,2 s):
+  - **giusto**: uscita dritta, errore ~0,5°, deriva < 0,5 m;
+  - **presto**: la S finisce prima, il rider si mette sulla lamina di stacco e carva di traverso. Presto di 0,35 s: 4° e 3 m di deriva. Presto di 0,6 s: 5,6° e 4,4 m. Presto di 1 s: manchi il kicker. Uscire di lato non vuol dire cadere;
+  - **tardi**: S schiacciata; pop e aiuto della curva alla rotazione calano in modo graduale (tardi di 0,35 s: 91%; 0,6 s: 84%; 1 s: 73%, con derapata).
 - ✅ **Rilascio prima del kicker** = carica annullata: il rider si raddrizza.
 
 ## A5. Stacco e volo

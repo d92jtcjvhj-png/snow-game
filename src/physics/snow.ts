@@ -24,9 +24,12 @@ export function maxCurvature(v: number, aN: number, mu: number): number {
 
 /** Edge angle the rider needs to balance a turn of curvature κ (lean = atan(a_lat / a_n)), plus a little platform. */
 export function edgeForCurvature(kappa: number, v: number, aN: number): number {
-  if (Math.abs(kappa) < 1e-5) return 0;
+  if (kappa === 0) return 0;
   const lean = Math.atan2(v * v * Math.abs(kappa), Math.max(1, aN));
-  return Math.sign(kappa) * Math.min(SNOW.EDGE_MAX, lean + 4 * DEG);
+  // a little platform angle on top of the lean, fading to 0 with the curvature: continuous through
+  // the edge change (no +4° → −4° jump)
+  const platform = 4 * DEG * Math.min(1, Math.abs(kappa) / 0.005);
+  return Math.sign(kappa) * Math.min(SNOW.EDGE_MAX, lean + platform);
 }
 
 export interface LateralResult {

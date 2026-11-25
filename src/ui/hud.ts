@@ -1,4 +1,4 @@
-import { DEG, MS_TO_KMH } from '../core/config';
+import { APPROACH, DEG, MS_TO_KMH } from '../core/config';
 import type { LandingRecord, TakeoffRecord } from '../world/run';
 
 export interface Assist {
@@ -134,7 +134,7 @@ export function createHud(root: HTMLElement, assist: Assist, h: { onStart(): voi
         rows.push(['Velocità allo stacco', `${(tk.speed * MS_TO_KMH).toFixed(0)} km/h`]);
         rows.push(['Pop', tk.release === 'nessuno' ? 'Nessuno (pollice tenuto oltre il labbro)' : `${tk.release === 'perfetto' ? 'Perfetto' : 'Presto'} · ${Math.round(tk.popQ * 100)}%`]);
         rows.push(['Lamina di stacco', `${EDGE[tk.edge]}${tk.edge !== 'flat' ? ' ' + Math.round(Math.abs(tk.edgeDeg)) + '°' : ''}${edgeOk ? '' : ' (serve ' + EDGE[tk.edgeExpected] + ')'}`]);
-        if (tk.timing !== null) rows.push(['Inizio curva', Math.abs(tk.timing) <= 0.35 ? 'Giusto' : `${tk.timing > 0 ? 'Presto' : 'Tardi'} di ${Math.abs(tk.timing).toFixed(1)} s`]);
+        if (tk.timing !== null) rows.push(['Inizio curva', Math.abs(tk.timing) <= APPROACH.ON_TIME ? 'Giusto' : `${tk.timing > 0 ? 'Presto' : 'Tardi'} di ${Math.abs(tk.timing).toFixed(1)} s`]);
         rows.push(['Direzione allo stacco', off < 0.5 ? 'Dritta' : `${off.toFixed(1)}° verso il ${side(tk.headingDeg)}`]);
         if (tk.skidding) rows.push(['Tavola', `In derapata (${Math.abs(tk.skidDeg).toFixed(0)}°)`]);
       }
