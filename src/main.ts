@@ -103,9 +103,9 @@ async function main() {
       markers.band.visible = showBand;
       if (showBand) Markers.place(markers.band, 0, heightAt(0, zIdeal), zIdeal, pitchAt(zIdeal));
       if (run.note) msg = run.note;
-      else if (run.approach.active) msg = p.z < BA.kickerBase ? (run.approach.timing > 0.35 ? 'Troppo presto!' : run.approach.timing < -0.35 ? 'Tardi!' : 'Curva d’impostazione…') : 'Stacca il pollice sul labbro (linea blu)';
+      else if (run.approach.active) msg = p.z < BA.kickerBase ? (run.approach.timing > APPROACH.ON_TIME ? 'Troppo presto!' : run.approach.timing < -APPROACH.ON_TIME ? 'Tardi!' : 'Curva d’impostazione…') : 'Stacca il pollice sul labbro (linea blu)';
       else if (p.z < BA.kickerBase - 70) msg = 'Speed check a destra per regolare la velocità';
-      else if (assist.indicators && Math.abs(p.z - zIdeal) < v * 0.35) { msg = 'Carica ora!'; big = true; }
+      else if (assist.indicators && Math.abs(p.z - zIdeal) < v * APPROACH.ON_TIME) { msg = 'Carica ora!'; big = true; }
       else if (p.z < zIdeal) msg = assist.indicators ? 'Appoggia il pollice sulla linea gialla' : 'Pollice sinistro: carica e inizia la curva';
     } else markers.band.visible = false;
 
