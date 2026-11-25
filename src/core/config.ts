@@ -75,15 +75,16 @@ export const APPROACH = {
   /** shortest line the rider can squeeze (m) */
   S_MIN: 6,
   /**
-   * Widest offset from the kicker axis (m) of the big swing: 1.3 m + 0.3 m·power, after an opening
-   * of ~30 % to the other side (OPENING). Peak lateral acceleration ≈ 1–1.1 g, under the edge grip. Coaches use the same entry line for
+   * Widest offset from the kicker axis (m) of the big swing: 1.25 m + 0.25 m·power, after an opening
+   * of ~55 % to the other side (OPENING). Coaches use the same entry line for
    * every spin (docs/research 09): the S barely grows, the spin size comes from the shoulders (Phase 3).
    * Same length for every power, so the right moment to start is the same for every spin.
    */
   OFFSET_MIN: 1.25,
   OFFSET_GAIN: 0.25,
-  /** opening to the other side before the big swing (shape parameter c: 0.45 ≈ 30 % of the swing) */
-  OPENING: 0.45,
+  /** opening to the other side before the big swing (shape parameter c: 0.75 ≈ 55 % of the swing;
+   * the turns get tighter, a little skid and speed loss at high power is accepted) */
+  OPENING: 0.75,
   /** grip fraction used for the clean-carve limit kLim (diagnostics) */
   GRIP_USE: 0.7,
   /** early: the extra heading from carving on after the S is capped here (rad) */
@@ -128,3 +129,48 @@ export const TAKEOFF_EDGE: Record<TrickKind, -1 | 0 | 1> = {
 
 /** Rider start: horizontal distance down the drop-in (m). Tuned so the lip speed without braking is ~62 km/h. */
 export const START_Z = 22;
+
+/**
+ * Rotation in the air (docs/research 12; legacy SIM). Angular momentum is set at the pop and conserved:
+ * ω = L / I(pose). Tuck (grab) spins faster, opening up slows down and levels the cork axis.
+ */
+export const SPIN = {
+  /** moment of inertia about the spin axis, rider + board (kg·m²): tucked / neutral / open */
+  I_TUCK: 2.0,
+  I_NEUTRAL: 2.5,
+  I_OPEN: 3.5,
+  /** spin rate at 100 % charge in the neutral pose (°/s): ≈ 950 °/s tucked (2340 in ~2.5 s) */
+  OMEGA_MAX: 760,
+  /** straight flips at full stick, neutral pose (°/s), legacy FLIP_MAX */
+  FLIP_MAX: 320,
+  /** the spin builds up over the first moments (shoulders lead, board follows), legacy */
+  RAMP_IN: 0.28,
+  /** cork tilt target from the stick: 35° + 35°·stick; misty/rodeo steeper */
+  TILT_MIN: 35,
+  TILT_GAIN: 35,
+  TILT_FLIPPY: 15,
+  /** the axis ramps in between these yaw angles (°): flat first half-turn → inversions = turns − 1 */
+  TILT_FROM: 90,
+  TILT_TO: 270,
+  /** opening up levels the axis (°/s), legacy LEVEL_RATE */
+  LEVEL_RATE: 130,
+  /** counter-rotation (legacy): torso brake (°/s), parked degrees and their release */
+  BRAKE_RATE: 260,
+  PARK_MAX: 180,
+  PARK_RET: 300,
+  /** a grab counts if held at least this long (s) */
+  GRAB_MIN: 0.15,
+} as const;
+
+/** Landing bands (docs/research 12): the worst row decides. Tolerance (training) multiplies them. */
+export const LANDING = {
+  /** board yaw vs travel (mod 180°): perfect / clean / sketchy / severe, beyond = crash (legacy 8/16, research ≤12–25–45) */
+  YAW: [8, 16, 28, 45],
+  /** body tilt vs the vertical (°): the legs adapt the board to the landing slope */
+  TILT: [8, 15, 25, 40],
+  /** equivalent fall height (m) */
+  EFH: [0.8, 1.5, 2.5, 3.5],
+  /** residual spin counts as extra yaw error over this time (s) */
+  RESIDUAL_T: 0.02,
+  TOLERANCE: 1.7,
+} as const;

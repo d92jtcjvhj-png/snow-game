@@ -36,3 +36,21 @@ export function quatFromBasis(xa: V3, ya: V3, za: V3): Q4 {
   const s = Math.sqrt(1 + m22 - m00 - m11) * 2;
   return { w: (m10 - m01) / s, x: (m02 + m20) / s, y: (m12 + m21) / s, z: 0.25 * s };
 }
+
+/** Quaternion from axis (unit) and angle (rad). */
+export const qAxis = (ax: number, ay: number, az: number, a: number): Q4 => {
+  const s = Math.sin(a / 2);
+  return { x: ax * s, y: ay * s, z: az * s, w: Math.cos(a / 2) };
+};
+export const qMul = (a: Q4, b: Q4): Q4 => ({
+  x: a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,
+  y: a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x,
+  z: a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w,
+  w: a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z,
+});
+export const qConj = (q: Q4): Q4 => ({ x: -q.x, y: -q.y, z: -q.z, w: q.w });
+/** Rotate a vector by a quaternion. */
+export const qRot = (q: Q4, v: V3): V3 => {
+  const p = qMul(qMul(q, { x: v.x, y: v.y, z: v.z, w: 0 }), qConj(q));
+  return { x: p.x, y: p.y, z: p.z };
+};

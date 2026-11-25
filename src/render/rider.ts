@@ -12,6 +12,12 @@ export interface RiderPose {
   /** arms: 0 relaxed, 1 wound up / spread */
   arms: number;
   airborne: boolean;
+  /** opened up in the air (arms out) */
+  opened?: boolean;
+  /** grab held in the air */
+  grab?: 'nose' | 'mute' | 'indy' | 'tail' | null;
+  /** fallen: the rider tumbles over */
+  crash?: boolean;
 }
 
 /**
@@ -27,6 +33,7 @@ export class Rider {
   private readonly armF: THREE.Group;
   private readonly armR: THREE.Group;
   private cr = 0;
+  private crashT = 0;
   /** body roll as a critically damped spring (docs/research 11): smooth lean, no snapping */
   private rollV = 0;
 
@@ -75,9 +82,22 @@ export class Rider {
     this.torso.position.y = 0.74 - 0.26 * c;
     this.torso.rotation.z = 0.22 * c;
     this.torso.rotation.y += (p.twist - this.torso.rotation.y) * Math.min(1, dt * 8);
-    const fx = p.airborne ? -1.1 : -0.5 * p.arms, rx = p.airborne ? 1.1 : 0.5 * p.arms, z = p.airborne ? 0.35 : 0.15;
-    const k = Math.min(1, dt * 10);
+    // arms (legacy poses): relaxed, wound up, opened in the air, or reaching for a grab
+    const toe = -0.55;
+    let fx = -0.5 * p.arms, rx = 0.5 * p.arms, fz = 0.15, rz = 0.15;
+    if (p.airborne) {
+      if (p.opened) { fx = -1.3; rx = 1.3; fz = 0.4; rz = 0.4; } else { fx = -0.4; rx = 0.4; fz = 0.3; rz = 0.3; }
+      if (p.grab === 'nose') { fz = 0; fx = -0.75; }
+      else if (p.grab === 'mute') { fz = toe; fx = -0.2; }
+      else if (p.grab === 'indy') { rz = toe; rx = 0.2; }
+      else if (p.grab === 'tail') { rz = 0; rx = 0.75; }
+    }
+    const k = Math.min(1, dt * 12);
     this.armF.rotation.x += (fx - this.armF.rotation.x) * k; this.armR.rotation.x += (rx - this.armR.rotation.x) * k;
-    this.armF.rotation.z += (z - this.armF.rotation.z) * k; this.armR.rotation.z += (z - this.armR.rotation.z) * k;
+    this.armF.rotation.z += (fz - this.armF.rotation.z) * k; this.armR.rotation.z += (rz - this.armR.rotation.z) * k;
+    // crash: tip over sideways onto the snow
+    this.crashT = p.crash ? Math.min(1.45, this.crashT + dt * 4) : 0;
+    this.roll.rotation.x = p.crash ? 0 : this.roll.rotation.x;
+    if (p.crash) this.roll.rotation.z = this.crashT;
   }
 }

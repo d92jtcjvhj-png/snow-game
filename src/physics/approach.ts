@@ -31,7 +31,7 @@ export interface ApproachCmd {
 
 /**
  * Plan-view shape of the line, f(u) for u ∈ [0, 1] (max 1 at u = ½), with its derivatives:
- * f = sin²(πu) − 2c·(1 − u)·sin²(2πu). A short opening to the OTHER side first (≈30 % of the big
+ * f = sin²(πu) − 2c·(1 − u)²·sin²(2πu). A clear opening to the OTHER side first (≈55 % of the big
  * swing), then the big swing on the takeoff edge's side, then back onto the axis, parallel, at the lip,
  * still carving on the takeoff edge (f''(1) = 2π² > 0). Smooth sine pieces: no straight bits.
  */
@@ -39,7 +39,8 @@ const OPEN = APPROACH.OPENING;
 export function lineShape(u: number): { f: number; d1: number; d2: number } {
   const P = Math.PI, s1 = Math.sin(P * u) ** 2, s1d = P * Math.sin(2 * P * u), s1dd = 2 * P * P * Math.cos(2 * P * u);
   const s2 = Math.sin(2 * P * u) ** 2, s2d = 2 * P * Math.sin(4 * P * u), s2dd = 8 * P * P * Math.cos(4 * P * u);
-  const g = (1 - u) * s2, gd = -s2 + (1 - u) * s2d, gdd = -2 * s2d + (1 - u) * s2dd;
+  const m = 1 - u;
+  const g = m * m * s2, gd = -2 * m * s2 + m * m * s2d, gdd = 2 * s2 - 4 * m * s2d + m * m * s2dd;
   return { f: s1 - 2 * OPEN * g, d1: s1d - 2 * OPEN * gd, d2: s1dd - 2 * OPEN * gdd };
 }
 

@@ -1,3 +1,4 @@
+import type { GrabId } from '../physics/spin';
 import { BOARD, POP } from './config';
 
 /**
@@ -10,11 +11,13 @@ export interface InputState {
   charge: number;
   axis: number;
   brake: number;
+  /** grab held (in the air) */
+  grab: GrabId | null;
 }
 
 export class Input {
   /** touch-driven values */
-  readonly touch = { charging: false, charge: 0, axis: 0, brake: 0, stickActive: false, brakeActive: false };
+  readonly touch = { charging: false, charge: 0, axis: 0, brake: 0, stickActive: false, brakeActive: false, grab: null as GrabId | null };
   private readonly keys = new Set<string>();
   private kbCharge = 0;
   private kbBrake = 0;
@@ -48,7 +51,9 @@ export class Input {
     this.kbBrake = b ? Math.min(1, Math.max(0.05, this.kbBrake + dt / BOARD.CHECK_RAMP)) : 0;
     const kbAxis = (k.has('ArrowUp') ? 1 : 0) - (k.has('ArrowDown') ? 1 : 0);
     const t = this.touch;
+    const kbGrab: GrabId | null = k.has('KeyQ') ? 'nose' : k.has('KeyW') ? 'mute' : k.has('KeyE') ? 'indy' : k.has('KeyR') ? 'tail' : null;
     return {
+      grab: t.grab ?? kbGrab,
       charging: t.charging || kbHeld,
       charge: t.charging ? t.charge : this.kbCharge,
       axis: t.stickActive ? t.axis : kbAxis,

@@ -4,7 +4,7 @@ Legenda: ✅ funziona · ⚠️ presente nel codice ma non raggiungibile / non u
 
 # Parte A — Nuovo motore (`src/`)
 
-Stato: **Fase 2, la tavola e tutto ciò che porta allo stacco** su un big air FIS. Rotazioni, grab, trick e giudizio dell'atterraggio arrivano in Fase 3. Il prototipo completo resta nel legacy (Parte B).
+Stato: **Fase 3**: tavola, approccio e stacco su un big air FIS, poi rotazioni in aria, grab e atterraggio (pulito → caduta). I punteggi arrivano più avanti. Il prototipo completo resta nel legacy (Parte B).
 Le ricerche su cui si basa la fisica sono in `docs/research/`.
 
 ## A1. Stack e struttura
@@ -56,7 +56,7 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
   - backside → punta (toe);
   - straight air e flip dritti → base piatta, senza curva.
 - ✅ **Linea reale vista dall'alto, fluida e completa** (ricerche `docs/research/07` e `11`): curve sinusoidali, senza tratti dritti, come le curve collegate vere. Frontside, rider regular:
-  - **apertura** breve dal lato opposto (~0,3 m, di punta);
+  - **apertura** dal lato opposto (~0,5 m, di punta);
   - **curva grande** sul lato della lamina di stacco (di tallone, fino a 1,25–1,5 m dall'asse);
   - **rientro** di punta verso l'asse;
   - **tallone** sul kicker, ancora in curva ("carve up and off the lip"), parallelo all'asse e centrato al labbro;
@@ -65,6 +65,7 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
 - ✅ **Stessa linea per tutti gli spin** (ricerca 09: i coach usano la stessa entrata; lo spin nasce dalle spalle, Fase 3): lunghezza fissa, quindi il momento giusto è uguale per tutti; la larghezza cresce poco con la carica, da 1,25 m a 1,5 m dall'asse, dopo l'apertura iniziale. Fino a ~1,1 g laterale, lamina fino a 65° (ricerca: carving d'élite 66–71°): nessuna derapata.
 - ✅ **Carica a passi dell'1%** (ricerca 10): continua, con tacche ogni 25% (visive e vibrazione su Android).
 - ✅ Il rider **segue la linea** prevista, sia in posizione sia in direzione: se la potenza cambia mentre la curva è in corso (tastiera, o dito che trascina ancora), la linea si adatta e torna comunque in asse alla fine della S.
+- ✅ **Apertura iniziale ampia** (~55% della curva grande, ~0,5 m dal lato opposto): curve più strette, quindi a carica alta un po' di derapata e ~5 km/h persi allo stacco (accettato).
 - ✅ Durata naturale della linea: **2,8 s fino al labbro** alla velocità del momento (~62 m a 79 km/h).
 - ✅ **Il labbro taglia la linea dove capita** (ricerca `docs/research/08`): la linea ha lunghezza fissa dall'inizio della carica e il rider non la adatta al kicker. **Punto di stacco, angolo d'uscita e lamina dipendono solo da quando inizi a caricare** e da quanto carichi (S più larga = effetto più forte).
 - ✅ **Tempismo** (finestra "giusto": ±0,2 s), frontside 100%:
@@ -91,15 +92,37 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
   - tempo in aria;
   - impatto (caduta equivalente);
   - aiuto della curva alla rotazione.
-- ❌ Rotazioni in aria, grab, trick, giudizio dell'atterraggio, cadute: Fase 3.
+- ✅ **Rotazioni in aria** (ricerca `docs/research/12`, legacy `SIM`):
+  - momento angolare fissato al pop dalla carica (potenza e verso), dal pop e dall'aiuto della curva (fino a +10%); in aria ω = L / I(posa);
+  - inerzia: raccolto (grab) 2,0, neutro 2,5, aperto 3,5 kg·m² → raccolto ≈ 950°/s a piena carica; nessun tetto fisso (su questo salto ~1800 è il massimo pulito);
+  - la rotazione parte in 0,28 s (spalle prima, tavola dopo);
+  - **fuori asse con la levetta**: su = cork, giù = misty (FS) o rodeo (BS); senza carica su/giù = frontflip/backflip;
+  - **asse a rampa**: piatto il primo mezzo giro, poi inclinato (35–70°, misty/rodeo più ripidi); aprirsi lo raddrizza a 130°/s. Ne esce inversioni = giri − 1 (double cork 1080, triple 1440…);
+  - inversioni contate quando la testa va sotto i piedi;
+  - **controrotazione** (pollice in aria dal lato opposto): frena e "parcheggia" fino a 180° nel busto, poi li restituisce ("Stalled" se tenuta a lungo); dallo stesso lato spinge +15%;
+  - **shifty** senza rotazione: solo la tavola, rotazione netta zero.
+- ✅ **Grab**: Nose, Mute, Indy, Tail (bottoni in aria o Q/W/E/R). Tenuto = raccolto e più veloce; lasciato = aperto, più lento e asse che si raddrizza; all'apice senza grab ti apri da solo. Conta se tenuto ≥ 0,15 s; vince il più lungo.
+- ✅ **Nome del trick**: Frontside / Backside / Cab / Switch Backside + Double/Triple/Quad/Quint + Cork/Misty/Rodeo + gradi a multipli di 180 + grab; Frontflip/Backflip; Straight air, Shifty, Stalled.
+- ✅ **Atterraggio = fisica + fasce** (ricerca 12):
+  - errore della tavola rispetto alla marcia (mod 180°, più la rotazione residua): ≤ 8° perfetto, ≤ 16° pulito, ≤ 28° sporco, ≤ 45° molto sporco, oltre = caduta;
+  - inclinazione del corpo rispetto alla verticale: 8 / 15 / 25 / 40°; capovolto = caduta;
+  - impatto (caduta equivalente): 0,8 / 1,5 / 2,5 / 3,5 m;
+  - zona: sul tavolo = sporco o peggio; sul knuckle = almeno molto sporco; fuori pista con tavola storta = caduta; di punta sbilanciato in avanti = un livello peggio;
+  - vince la fascia peggiore; **tolleranza ×1,7** opzionale;
+  - poi decide la fisica: la tavola tiene l'imbardata con cui atterra, quindi chi atterra storto derapa e frena;
+  - **atterrare al contrario (~180°) è pulito e prosegui in switch** (stance della tavola nella fisica);
+  - **caduta**: il rider si ribalta e scivola, frenato forte.
+- ✅ **Scheda**: nome del trick, esito, nota, consiglio, diagramma della tavola, gradi reali, inversioni, grab, tempo in aria, punto d'atterraggio, impatto, errori; sotto, i dati di stacco.
+- ❌ Punteggi e giudici: più avanti. Underflip e grab "tirati": più avanti.
 - ❌ Switch e cab: la tabella delle lamine li prevede, ma il rider va sempre in avanti.
 - ❌ Ollie / hop sull'approccio: nel legacy c'erano, qui il rilascio prima del kicker annulla la carica.
 
 ## A6. Comandi
 - ✅ **Telefono**:
   - pollice sinistro libero: tieni premuto per iniziare la carica e la curva, trascina di lato per verso e potenza (barra con tacche 25/50/75/100% e vibrazione), stacca per il pop;
-  - a destra, sulla neve: **pad speed check** (tieni premuto e trascina giù = più forte) e levetta dell'asse su/giù (per ora decide solo flip → base piatta).
-- ✅ **Tastiera**: Z/X carica (sinistra/destra), Spazio carica dritta, B speed check (sale in 0,6 s), ↑/↓ asse, R riprova, Invio = Gioca.
+  - a destra, sulla neve: **pad speed check** (tieni premuto e trascina giù = più forte) e levetta dell'asse su/giù (cork, misty/rodeo, flip);
+  - a destra, in aria: **4 bottoni grab**; il pollice sinistro fa controrotazione / shifty.
+- ✅ **Tastiera**: Z/X carica (sinistra/destra) e in aria controrotazione, Spazio carica dritta, B speed check, ↑/↓ asse, Q/W/E/R grab, R riprova, Invio = Gioca.
 
 ## A7. Grafica
 - ✅ Stile low-poly cartoon: flat shading, palette del legacy, abeti e montagne con seed fisso, nebbia.
@@ -120,17 +143,19 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
 - ✅ Intro con i comandi, HUD (km/h, lamina heel/toe con gradi, fps e qualità), barra di carica con "Frontside 80% · stacco di tallone".
 - ✅ Messaggi contestuali: "Carica ora!", "Troppo presto!", "Tardi!", "Stacca il pollice sul labbro".
 - ✅ ⚙ Allenamento, salvato in localStorage:
-  - **Indicatori**: fascia gialla sulla neve che indica dove iniziare a caricare alla velocità attuale, e anello del punto d'atterraggio previsto;
-  - **Rallentatore in aria**.
+  - **Indicatori**: fascia gialla dove iniziare a caricare, anello del punto d'atterraggio previsto e, in aria, gradi in diretta, inversioni, grab, **bussola** della tavola rispetto alla marcia e **"Apri ora!"**;
+  - **Rallentatore in aria**;
+  - **Tolleranza atterraggio ×1,7**.
 - ✅ Schermata "gira il telefono in verticale".
 - ❌ Suoni: da fare.
 
 ## A9. Test e deploy
-- ✅ 33 test Vitest headless:
+- ✅ 54 test Vitest headless:
   - `snow`: sciancratura, anisotropia, presa limitata, derapata;
   - `board`: rettilineo, curva, traverso, speed check (stop sul 35°, check leggero, tavola a 90°), determinismo;
   - `bigair`: geometria FIS, mesh uguale al collider, velocità e sweet spot, riproducibilità;
   - `approach`: giusto, presto, tardi (verso opposto), molto tardi (lamina non settata), potenza, frontside/heel, backside/toe, straight e flip piatti, niente pop senza rilascio;
+  - `spin`, `landing`, `trick`, `run3` (salto completo: pulito, sovra-rotazione, straight air, caduta);
   - `loop`.
 - ✅ GitHub Actions: typecheck + test + build a ogni push; deploy su GitHub Pages da `main`.
 - ⚠️ Il bundle è grande (~1,8 MB gzip), soprattutto per il WASM di Rapier: da ottimizzare.
