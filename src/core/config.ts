@@ -24,8 +24,14 @@ export const SNOW = {
   MU_LAT_EDGE: 1.0,
   /** edge angle at which grip reaches MU_LAT_EDGE */
   EDGE_FULL: 20 * DEG,
-  /** sliding (skid) friction once the grip limit is exceeded: this is what brakes in a speed check */
+  /** sliding (skid) friction once the grip limit is exceeded */
   MU_SKID: 0.6,
+  /**
+   * speed check with the heel edge dug in (board across, edge ≥ CHECK_EDGE_FULL): the edge scrapes
+   * the snow and brakes much harder than a flat sideways slide — enough to slow down even on the 35° drop-in
+   */
+  MU_CHECK: 1.1,
+  CHECK_EDGE_FULL: 35 * DEG,
   /** park board sidecut radius (research: 7.6–8.4 m) */
   SIDECUT_R: 8,
   EDGE_MAX: 55 * DEG,

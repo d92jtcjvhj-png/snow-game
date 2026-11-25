@@ -43,9 +43,9 @@ describe('big air geometry (FIS-like)', () => {
     expect(run.landing!.dKnuckle).toBeGreaterThan(12);
   });
 
-  it('with a speed check, 53–58 km/h: lands in the sweet spot after the knuckle, airtime 2–3 s', () => {
+  it('with a short speed check, 53–58 km/h: lands in the sweet spot after the knuckle, airtime 2–3 s', () => {
     const run = new Run(R, grid);
-    straight(run, 8);
+    straight(run, 5);
     const kmh = run.takeoff!.speed * 3.6;
     expect(kmh).toBeGreaterThan(53);
     expect(kmh).toBeLessThan(58);

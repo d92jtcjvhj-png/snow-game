@@ -2,7 +2,7 @@ import type RAPIER from '@dimforge/rapier3d-compat';
 import { BOARD_GROUPS } from './world';
 import { BOARD, DEG, GRAVITY, SNOW } from '../core/config';
 import { dragK, lateralImpulse, longitudinalImpulse } from './snow';
-import { add, clamp, cross, dot, len, norm, quatFromBasis, scale, sub, v3, wrap, type Q4, type V3 } from './vec';
+import { add, clamp, cross, dot, len, norm, quatFromBasis, scale, smoothstep, sub, v3, wrap, type Q4, type V3 } from './vec';
 import type { Rapier } from './world';
 
 /** The snow surface, analytic: the same function the terrain mesh is built from. */
@@ -207,7 +207,9 @@ export class Board {
         const across = Math.abs(Math.sin(wrap(this.psi - travel)));
         const vt = sub(v, scale(this.normal, dot(v, this.normal)));
         const vtl = len(vt);
-        const decel = (SNOW.MU_SKID * across + SNOW.MU_LONG * (1 - across)) * this.aN * dt;
+        // the more the edge is dug in, the harder it scrapes (speed check: up to MU_CHECK)
+        const muSlide = braking ? SNOW.MU_SKID + (SNOW.MU_CHECK - SNOW.MU_SKID) * smoothstep(Math.abs(this.edge) / SNOW.CHECK_EDGE_FULL) : SNOW.MU_SKID;
+        const decel = (muSlide * across + SNOW.MU_LONG * (1 - across)) * this.aN * dt;
         if (vtl > 1e-6) dv = add(dv, scale(vt, -Math.min(vtl, decel) / vtl));
         this.skidding = across > 0.3;
         this.aLat = 0;

@@ -23,7 +23,7 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
 - ✅ Mesh three e collider trimesh di Rapier nascono dalla stessa griglia h(x, z).
 - ✅ Velocità tarate sui dati reali:
   - senza speed check si stacca a ~62 km/h e si atterra lunghi (~18 m dopo il knuckle);
-  - con ~8 m di speed check si stacca a ~56 km/h e si atterra 6 m dopo il knuckle, con 2,4 s di volo.
+  - con ~5 m di speed check a pieno si stacca a ~56 km/h e si atterra nello sweet spot dopo il knuckle, con ~2,4 s di volo.
 
 ## A3. Fisica della neve (`src/physics`)
 - ✅ Loop a passo fisso 1/120 s con interpolazione, deterministico.
@@ -41,9 +41,11 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
 - ✅ Carico normale con la curvatura del terreno: transizione del kicker, uscita dell'atterraggio.
 - ✅ Resistenza aerodinamica ½ρCdA v², CdA 0,5 (0,38 quando ti accucci per caricare).
 - ✅ **Speed check analogico**:
-  - la tavola va di traverso fino a 80° × intensità, sulla lamina di tallone;
-  - la neve frena lungo la direzione di marcia, quindi lo speed check non devia mai;
-  - toglie ~6 km/h ogni 8 m a pieno.
+  - la tavola va di traverso fino a 80° × intensità, sulla lamina di tallone (15° + 20° × intensità);
+  - più la lamina è piantata, più gratta: attrito di derapata da 0,6 fino a 1,1;
+  - premere il pad = speed check al 50%, trascinare giù = fino al 100%;
+  - a pieno rallenta anche sul drop-in a 35°; sull'approccio a 12° toglie ~6 m/s in un secondo;
+  - la neve frena lungo la direzione di marcia, quindi lo speed check non devia mai.
 - ✅ **Il giocatore non sterza mai.** Quando non c'è una curva, il rider riporta la tavola in linea con la marcia.
 
 ## A4. Curva automatica pre-salto (`src/physics/approach.ts`)
@@ -122,7 +124,7 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
 - ❌ Suoni: da fare.
 
 ## A9. Test e deploy
-- ✅ 25 test Vitest headless:
+- ✅ 26 test Vitest headless:
   - `snow`: sciancratura, anisotropia, presa limitata, derapata;
   - `board`: rettilineo, curva, traverso, speed check, determinismo;
   - `bigair`: geometria FIS, mesh uguale al collider, velocità e sweet spot, riproducibilità;
