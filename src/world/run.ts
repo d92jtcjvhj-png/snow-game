@@ -95,6 +95,8 @@ export class Run {
   private kind: TrickKind = 'straight';
   private pending: { q: number; power: number; axis: number } | null = null;
   private landedT = 0;
+  /** the set-up line was interrupted by a speed check */
+  lineBroken = false;
 
   constructor(R: Rapier, grid: TerrainGrid) {
     this.world = createPhysicsWorld(R);
@@ -119,6 +121,7 @@ export class Run {
     this.kind = 'straight';
     this.approachPhase = 'none';
     this.note = '';
+    this.lineBroken = false;
   }
 
   /** Advance one fixed step. */
@@ -132,11 +135,13 @@ export class Run {
 
     if (this.phase === 'ride') {
       const beforeLip = p0.z < LM.zLip;
-      if (pressed && beforeLip && !this.pending) { this.chargeOn = true; this.note = ''; }
+      if (pressed && beforeLip && !this.pending) { this.chargeOn = true; this.note = ''; this.lineBroken = false; }
       if (this.chargeOn && held) {
-        this.power = Math.abs(inp.charge) >= POP.DEAD ? Math.abs(inp.charge) : 0;
+        this.power = Math.abs(inp.charge) >= POP.DEAD ? Math.round(Math.abs(inp.charge) / POP.STEP) * POP.STEP : 0;
         // the set-up carve starts as soon as the charge has a side
-        if (!this.approach.active && this.power > 0) {
+        // a speed check during the set-up ruins the line: the S restarts where you are when you let go
+        if (this.approach.active && inp.brake > 0.02) { this.approach.stop(); this.lineBroken = true; this.note = 'Speed check durante la curva: linea rovinata'; }
+        if (!this.approach.active && this.power > 0 && inp.brake <= 0.02) {
           const side = inp.charge > 0 ? 1 : -1;
           this.approach.start(side, LM.zLip - p0.z, v, this.s, b.aN, p0.x);
         }

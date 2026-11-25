@@ -44,7 +44,8 @@ export class Input {
     // first frame of Z/X: jump over the dead zone so the side is set at once
     if ((z || x) && Math.abs(this.kbCharge) < POP.DEAD) this.kbCharge = (x ? 1 : -1) * POP.DEAD;
     const b = k.has('KeyB') || k.has('ArrowDown') && k.has('ShiftLeft');
-    this.kbBrake = b ? Math.min(1, this.kbBrake + dt / BOARD.CHECK_RAMP) : Math.max(0, this.kbBrake - dt * 4);
+    // pressed = light check (edge 25°), held = sits harder on the heels up to 65°
+    this.kbBrake = b ? Math.min(1, Math.max(0.05, this.kbBrake + dt / BOARD.CHECK_RAMP)) : 0;
     const kbAxis = (k.has('ArrowUp') ? 1 : 0) - (k.has('ArrowDown') ? 1 : 0);
     const t = this.touch;
     return {

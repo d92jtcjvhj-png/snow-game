@@ -2,7 +2,7 @@ import type RAPIER from '@dimforge/rapier3d-compat';
 import { BOARD_GROUPS } from './world';
 import { BOARD, DEG, GRAVITY, SNOW } from '../core/config';
 import { dragK, lateralImpulse, longitudinalImpulse } from './snow';
-import { add, clamp, cross, dot, len, norm, quatFromBasis, scale, smoothstep, sub, v3, wrap, type Q4, type V3 } from './vec';
+import { add, clamp, cross, dot, len, norm, quatFromBasis, scale, sub, v3, wrap, type Q4, type V3 } from './vec';
 import type { Rapier } from './world';
 
 /** The snow surface, analytic: the same function the terrain mesh is built from. */
@@ -174,14 +174,16 @@ export class Board {
       this.aN = Math.max(0, GRAVITY * this.normal.y + vf * vf * this.kv);
 
       // edge: speed check (heel edge) overrides the rider's carve
-      const braking = cmd.brake > 0.02 && speed > 1;
-      const edgeTarget = braking ? BOARD.CHECK_EDGE_MIN + BOARD.CHECK_EDGE_GAIN * cmd.brake : cmd.edge;
+      const braking = cmd.brake > 0.02;
+      const edgeTarget = braking ? BOARD.CHECK_EDGE_MIN + (BOARD.CHECK_EDGE_MAX - BOARD.CHECK_EDGE_MIN) * cmd.brake : cmd.edge;
       this.edge += clamp(edgeTarget - this.edge, -SNOW.EDGE_RATE * dt, SNOW.EDGE_RATE * dt);
 
-      // yaw
-      const travel = Math.atan2(v.x, v.z);
+      // yaw (when almost stopped, "travel" is the fall line)
+      const fall = Math.atan2(this.normal.x, this.normal.z);
+      const travel = speed > 1 ? Math.atan2(v.x, v.z) : fall;
       if (braking) {
-        const target = travel + BOARD.CHECK_ANGLE * cmd.brake;
+        // fully across, on the heel edge (+ψ for a regular rider)
+        const target = travel + BOARD.CHECK_ANGLE;
         this.psi += clamp(wrap(target - this.psi), -BOARD.CHECK_YAW_RATE * dt, BOARD.CHECK_YAW_RATE * dt);
       } else {
         this.psi += cmd.kappa * vf * dt;
@@ -202,15 +204,22 @@ export class Board {
       // not holding a turn, so the snow brakes along the travel direction instead of deflecting it
       const sliding = braking || off > SNOW.SKID_ANGLE || (Math.abs(cmd.kappa) < 1e-4 && off > 0.5 * DEG);
       if (sliding) {
-        // speed check: the board slides across its edge; the snow brakes along the direction of travel
-        // (the rider does not turn: the skid friction acts against the velocity, not across it)
+        // the board slides across its edge; the snow brakes along the direction of travel, never
+        // deflecting it (the rider does not steer). Cutting force N·tanΨ·sinγ (Komissarov 2021) for a
+        // speed check; a plain skid uses MU_SKID.
         const across = Math.abs(Math.sin(wrap(this.psi - travel)));
         const vt = sub(v, scale(this.normal, dot(v, this.normal)));
         const vtl = len(vt);
-        // the more the edge is dug in, the harder it scrapes (speed check: up to MU_CHECK)
-        const muSlide = braking ? SNOW.MU_SKID + (SNOW.MU_CHECK - SNOW.MU_SKID) * smoothstep(Math.abs(this.edge) / SNOW.CHECK_EDGE_FULL) : SNOW.MU_SKID;
-        const decel = (muSlide * across + SNOW.MU_LONG * (1 - across)) * this.aN * dt;
-        if (vtl > 1e-6) dv = add(dv, scale(vt, -Math.min(vtl, decel) / vtl));
+        const mu = braking ? Math.tan(Math.abs(this.edge)) * across + SNOW.MU_LONG * (1 - across) : SNOW.MU_SKID * across + SNOW.MU_LONG * (1 - across);
+        const budget = mu * this.aN * dt;
+        if (braking && vtl < 0.3) {
+          // (almost) stopped: static hold against the slope as long as the edge angle can take it
+          const g = v3(0, -GRAVITY, 0), gt = sub(g, scale(this.normal, dot(g, this.normal)));
+          const need = add(vt, scale(gt, dt)), nl = len(need);
+          if (nl > 1e-9) dv = add(dv, scale(need, -Math.min(nl, budget) / nl));
+        } else if (vtl > 1e-6) {
+          dv = add(dv, scale(vt, -Math.min(vtl, budget) / vtl));
+        }
         this.skidding = across > 0.3;
         this.aLat = 0;
       } else {

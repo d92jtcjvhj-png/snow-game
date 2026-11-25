@@ -111,7 +111,8 @@ async function main() {
 
     controls.setGround(onGround);
     controls.barKnob(input.keyboardCharging && run.phase === 'ride' ? inp.charge : null);
-    cam.update(pos, run.phase === 'air', pred ? landing : null, real);
+    const bv = b.velocity();
+    cam.update(pos, run.phase === 'air', new THREE.Vector3(bv.x, bv.y, bv.z), real);
     gfx.follow(pos);
     gfx.quality.sample(real);
     hud.update({ speed: b.speed(), edge: b.edge, grounded: b.grounded && run.phase !== 'air', charging, charge: inp.charge, axis: inp.axis, msg, bigMsg: big, fps: 1000 / gfx.quality.frameMs, tier: gfx.quality.tier });

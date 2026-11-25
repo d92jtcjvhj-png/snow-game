@@ -3,7 +3,7 @@ import { flat } from './materials';
 
 /** Pose for one frame (all smoothed by the rider itself). */
 export interface RiderPose {
-  /** board edge angle (rad, + heel): the board and the rider roll together */
+  /** board edge angle (rad, + heel): the rider rolls with it, a bit less (angulation) */
   edge: number;
   /** 0..1 */
   crouch: number;
@@ -60,7 +60,8 @@ export class Rider {
 
   update(p: RiderPose, dt: number): void {
     // roll: heel edge (+) puts the +x (heel) side down → negative rotation about the board axis
-    this.roll.rotation.z += (-p.edge - this.roll.rotation.z) * Math.min(1, dt * 14);
+    // riders angulate (knees, hips): the body leans less than the board's edge angle
+    this.roll.rotation.z += (-0.75 * p.edge - this.roll.rotation.z) * Math.min(1, dt * 14);
     this.cr += (p.crouch - this.cr) * Math.min(1, dt * (p.crouch < this.cr ? 14 : 7));
     const c = this.cr;
     this.legF.scale.y = this.legR.scale.y = 1 - 0.36 * c;
