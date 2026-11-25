@@ -84,6 +84,12 @@ export class Approach {
     if (cmd.phase !== 'ramp') {
       cmd.kappa += APPROACH.LINE_GAIN * (this.psiRef - travel);
       cmd.edge = edgeForCurvature(cmd.kappa, v, aN);
+      // hand-over: from the last edge change of the S the rider rolls progressively onto the takeoff
+      // edge and stays there up the kicker (no "straighten up, then edge again" at the kicker base)
+      const u = (s - this.s0) / this.L;
+      const w = cmd.phase === 'hold' ? 1 : smoothstep((u - 2 / 3) / 0.25);
+      const plat = w * this.platform(power);
+      cmd.edge = this.side > 0 ? Math.max(cmd.edge, plat) : Math.min(cmd.edge, -plat);
     }
     return cmd;
   }
@@ -108,7 +114,11 @@ export class Approach {
       const kappa = this.side * this.kLim * APPROACH.HOLD_EARLY * smoothstep(extra / 4) * Math.exp(-extra / APPROACH.HOLD_LEN);
       return { kappa, edge: edgeForCurvature(kappa, v, aN), phase: 'hold' };
     }
-    const edge = this.side * (APPROACH.RAMP_EDGE + APPROACH.RAMP_EDGE_GAIN * power);
-    return { kappa: this.side * APPROACH.RAMP_CURV, edge, phase: 'ramp' };
+    return { kappa: this.side * APPROACH.RAMP_CURV, edge: this.side * this.platform(power), phase: 'ramp' };
+  }
+
+  /** takeoff-edge platform angle (rad, unsigned) */
+  private platform(power: number): number {
+    return APPROACH.RAMP_EDGE + APPROACH.RAMP_EDGE_GAIN * power;
   }
 }
