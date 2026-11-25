@@ -60,10 +60,10 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
   - backside: lo stesso, a specchio;
   - arriva **parallela all'asse e centrata proprio al labbro**;
   - dall'ultimo cambio di spigolo il rider si mette progressivamente sulla lamina di stacco e la **tiene visibilmente su tutto il kicker** (15° + 15° × potenza, fino a 30°).
-- ✅ **Stessa linea per tutti gli spin** (ricerca 09: i coach usano la stessa entrata; lo spin nasce dalle spalle, Fase 3): lunghezza fissa, quindi il momento giusto è uguale per tutti; la larghezza cresce poco con la carica, da 1,2 m a 1,6 m dall'asse. Archi di raggio ~30–50 m, ~1 g laterale.
+- ✅ **Stessa linea per tutti gli spin** (ricerca 09: i coach usano la stessa entrata; lo spin nasce dalle spalle, Fase 3): lunghezza fissa, quindi il momento giusto è uguale per tutti; la larghezza cresce poco con la carica, da 1,5 m a 1,9 m dall'asse (curve ampie). Archi di raggio ~40 m, ~1–1,2 g laterale: a carica piena, nel punto più stretto, la tavola derapa leggermente (~1 km/h persa), come gli archi d'impostazione reali ad alta velocità.
 - ✅ **Carica a passi dell'1%** (ricerca 10): continua, con tacche ogni 25% (visive e vibrazione su Android).
 - ✅ Il rider **segue la linea** prevista, sia in posizione sia in direzione: se la potenza cambia mentre la curva è in corso (tastiera, o dito che trascina ancora), la linea si adatta e torna comunque in asse alla fine della S.
-- ✅ Durata naturale della linea: **2 s fino al labbro** alla velocità del momento (~40 m a 72 km/h; ricerca: 25–40 m). La fascia gialla è nello stesso punto di prima.
+- ✅ Durata naturale della linea: **2,5 s fino al labbro** alla velocità del momento (~55 m a 79 km/h).
 - ✅ **Il labbro taglia la linea dove capita** (ricerca `docs/research/08`): la linea ha lunghezza fissa dall'inizio della carica e il rider non la adatta al kicker. **Punto di stacco, angolo d'uscita e lamina dipendono solo da quando inizi a caricare** e da quanto carichi (S più larga = effetto più forte).
 - ✅ **Tempismo** (finestra "giusto": ±0,2 s), frontside 100%:
   - **giusto**: la S finisce al labbro: centro, dritto, sulla lamina di stacco;

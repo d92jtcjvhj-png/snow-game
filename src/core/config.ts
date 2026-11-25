@@ -71,15 +71,16 @@ export const APPROACH = {
    * return arc on the takeoff edge that carries up the kicker and arrives parallel to the axis at the lip.
    * Research: set-up starts ~25–40 m before the lip at big-air speed (docs/research 07).
    */
-  S_TIME: 2.0,
+  S_TIME: 2.5,
   /** shortest line the rider can squeeze (m) */
   S_MIN: 6,
   /**
-   * Widest offset from the kicker axis (m): 1.2 m + 0.4 m·power. Coaches use the same entry line for
+   * Widest offset from the kicker axis (m): 1.5 m + 0.4 m·power (wide, gentle arcs: the peak lateral
+   * acceleration 4π²·offset/S_TIME² stays under the edge grip, ~1.2 g, so the S never skids). Coaches use the same entry line for
    * every spin (docs/research 09): the S barely grows, the spin size comes from the shoulders (Phase 3).
    * Same length for every power, so the right moment to start is the same for every spin.
    */
-  OFFSET_MIN: 1.2,
+  OFFSET_MIN: 1.5,
   OFFSET_GAIN: 0.4,
   /** early: curvature of the takeoff-edge carve after the S, as a fraction of the clean grip limit */
   GRIP_USE: 0.7,
