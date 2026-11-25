@@ -84,6 +84,34 @@ describe('board on the snow', () => {
     expect(dv(12, 0.5)).toBeGreaterThan(2.5);
   });
 
+  it('full speed check (board across, 65° on the heels) stops the rider even on the 35° drop-in and holds him', () => {
+    const { b, step } = setup(35 * DEG, 17);
+    for (let i = 0; i < 4 / STEP; i++) step({ ...NONE, brake: 1 });
+    expect(b.speed()).toBeLessThan(0.3);
+    const z = b.position().z;
+    for (let i = 0; i < 1 / STEP; i++) step({ ...NONE, brake: 1 });
+    expect(Math.abs(b.position().z - z)).toBeLessThan(0.1);
+  });
+
+  it('a light check (25°) brakes on the 12° approach but not on the 35° drop-in (Ψ < slope)', () => {
+    const dv = (angle: number) => {
+      const { b, step } = setup(angle * DEG, 15);
+      for (let i = 0; i < 30; i++) step({ ...NONE, brake: 0.05 });
+      const v0 = b.speed();
+      for (let i = 0; i < 120; i++) step({ ...NONE, brake: 0.05 });
+      return v0 - b.speed();
+    };
+    expect(dv(12)).toBeGreaterThan(1.5);
+    expect(dv(35)).toBeLessThan(0);
+  });
+
+  it('the board turns fully across (≈90°) on the heel edge', () => {
+    const { b, step } = setup(12 * DEG, 15);
+    for (let i = 0; i < 0.3 / STEP; i++) step({ ...NONE, brake: 0.5 });
+    expect(Math.abs(b.psi - b.travelHeading()) / DEG).toBeGreaterThan(80);
+    expect(b.edge).toBeGreaterThan(30 * DEG);
+  });
+
   it('speed check does not push the rider sideways', () => {
     const { b, step } = setup(12 * DEG, 18);
     for (let i = 0; i < 120; i++) step({ ...NONE, brake: i < 60 ? 1 : 0 });

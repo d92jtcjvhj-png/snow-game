@@ -40,12 +40,13 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
   - R = R_sciancratura·cos φ, con sciancratura 8 m.
 - ✅ Carico normale con la curvatura del terreno: transizione del kicker, uscita dell'atterraggio.
 - ✅ Resistenza aerodinamica ½ρCdA v², CdA 0,5 (0,38 quando ti accucci per caricare).
-- ✅ **Speed check analogico**:
-  - la tavola va di traverso fino a 80° × intensità, sulla lamina di tallone (15° + 20° × intensità);
-  - più la lamina è piantata, più gratta: attrito di derapata da 0,6 fino a 0,95 (ricerca: hockey stop ~7–10 m/s²);
-  - premere il pad = speed check al 50%, trascinare giù = fino al 100%;
-  - a pieno rallenta anche sul drop-in a 35°; sull'approccio a 12° toglie ~6 m/s in un secondo;
-  - la neve frena lungo la direzione di marcia, quindi lo speed check non devia mai.
+- ✅ **Speed check reale** (ricerca `docs/research/09`, modello di Komissarov 2021):
+  - appena premi, la tavola gira **a 90°, di traverso**, sui talloni, in ~0,25 s;
+  - trascinando giù il rider schiaccia di più sui talloni: lamina da **25°** (premuto e basta) a **65°** (tutto giù);
+  - forza frenante N·tanΨ·sinγ: di traverso su un pendio rallenti solo se la lamina supera la pendenza;
+  - premuto e basta frena sull'approccio a 12° ma non sul drop-in a 35°; **tutto giù ti ferma anche sul drop-in** (da 35 km/h in ~1 s) e ti tiene fermo;
+  - la neve frena lungo la direzione di marcia, quindi lo speed check non devia mai;
+  - **speed check durante la curva d'impostazione = linea rovinata**: la S si interrompe e riparte da dove sei quando lasci il freno (di solito esci storto o manchi il kicker).
 - ✅ **Il giocatore non sterza mai.** Quando non c'è una curva, il rider riporta la tavola in linea con la marcia.
 
 ## A4. Curva automatica pre-salto (`src/physics/approach.ts`)
@@ -59,7 +60,8 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
   - backside: lo stesso, a specchio;
   - arriva **parallela all'asse e centrata proprio al labbro**;
   - dall'ultimo cambio di spigolo il rider si mette progressivamente sulla lamina di stacco e la **tiene visibilmente su tutto il kicker** (15° + 15° × potenza, fino a 30°).
-- ✅ **Più carica = linea più larga**: scostamento massimo dall'asse 0,5 m + 1 m × potenza, cioè ~1,5 m a carica piena (ricerca: 1–2 m nel big air). Archi di raggio ~30–50 m, ~1 g laterale: a quelle velocità il carving puro sulla sciancratura è impossibile.
+- ✅ **Stessa linea per tutti gli spin** (ricerca 09: i coach usano la stessa entrata; lo spin nasce dalle spalle, Fase 3): lunghezza fissa, quindi il momento giusto è uguale per tutti; la larghezza cresce poco con la carica, da 1,2 m a 1,6 m dall'asse. Archi di raggio ~30–50 m, ~1 g laterale.
+- ✅ **Carica a passi dell'1%** (ricerca 10): continua, con tacche ogni 25% (visive e vibrazione su Android).
 - ✅ Il rider **segue la linea** prevista, sia in posizione sia in direzione: se la potenza cambia mentre la curva è in corso (tastiera, o dito che trascina ancora), la linea si adatta e torna comunque in asse alla fine della S.
 - ✅ Durata naturale della linea: **2 s fino al labbro** alla velocità del momento (~40 m a 72 km/h; ricerca: 25–40 m). La fascia gialla è nello stesso punto di prima.
 - ✅ **Il labbro taglia la linea dove capita** (ricerca `docs/research/08`): la linea ha lunghezza fissa dall'inizio della carica e il rider non la adatta al kicker. **Punto di stacco, angolo d'uscita e lamina dipendono solo da quando inizi a caricare** e da quanto carichi (S più larga = effetto più forte).
@@ -122,9 +124,9 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
 - ❌ Suoni: da fare.
 
 ## A9. Test e deploy
-- ✅ 29 test Vitest headless:
+- ✅ 33 test Vitest headless:
   - `snow`: sciancratura, anisotropia, presa limitata, derapata;
-  - `board`: rettilineo, curva, traverso, speed check, determinismo;
+  - `board`: rettilineo, curva, traverso, speed check (stop sul 35°, check leggero, tavola a 90°), determinismo;
   - `bigair`: geometria FIS, mesh uguale al collider, velocità e sweet spot, riproducibilità;
   - `approach`: giusto, presto, tardi (verso opposto), molto tardi (lamina non settata), potenza, frontside/heel, backside/toe, straight e flip piatti, niente pop senza rilascio;
   - `loop`.

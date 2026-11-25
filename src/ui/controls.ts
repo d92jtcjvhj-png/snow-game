@@ -59,17 +59,17 @@ export function createControls(root: HTMLElement, input: Input): Controls {
   const upL = (e: PointerEvent) => { if (!L || e.pointerId !== L.id) return; L = null; t.charging = false; bar.hidden = true; };
   zoneL.addEventListener('pointerup', upL); zoneL.addEventListener('pointercancel', upL);
 
-  // speed check pad: press = a real check (50%), drag down = up to full
+  // speed check pad: press = board across on the heels (edge 25°), drag down = sit harder (up to 65°)
   const pad = $('brakePad'), fill = $('brakeFill');
   let B: { id: number; y0: number } | null = null;
   const setBrake = (v: number) => { t.brake = v; fill.style.height = Math.round(v * 100) + '%'; };
   pad.addEventListener('pointerdown', (e) => {
     e.preventDefault(); pad.setPointerCapture(e.pointerId);
-    B = { id: e.pointerId, y0: e.clientY }; t.brakeActive = true; setBrake(0.5); vibrate(5);
+    B = { id: e.pointerId, y0: e.clientY }; t.brakeActive = true; setBrake(0.05); vibrate(5);
   });
   pad.addEventListener('pointermove', (e) => {
     if (!B || e.pointerId !== B.id) return;
-    setBrake(Math.max(0.5, Math.min(1, 0.5 + (0.5 * (e.clientY - B.y0)) / BRAKE_PX)));
+    setBrake(Math.max(0.05, Math.min(1, 0.05 + (0.95 * (e.clientY - B.y0)) / BRAKE_PX)));
   });
   const upB = (e: PointerEvent) => { if (!B || e.pointerId !== B.id) return; B = null; t.brakeActive = false; setBrake(0); };
   pad.addEventListener('pointerup', upB); pad.addEventListener('pointercancel', upB);

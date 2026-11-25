@@ -26,12 +26,6 @@ export const SNOW = {
   EDGE_FULL: 20 * DEG,
   /** sliding (skid) friction once the grip limit is exceeded */
   MU_SKID: 0.6,
-  /**
-   * speed check with the heel edge dug in (board across, edge ≥ CHECK_EDGE_FULL): the edge scrapes
-   * the snow and brakes much harder than a flat sideways slide — enough to slow down even on the 35° drop-in
-   */
-  MU_CHECK: 0.95,
-  CHECK_EDGE_FULL: 35 * DEG,
   /** park board sidecut radius (research: 7.6–8.4 m) */
   SIDECUT_R: 8,
   EDGE_MAX: 55 * DEG,
@@ -51,12 +45,17 @@ export const SNOW = {
 export const BOARD = {
   LENGTH: 1.55,
   RADIUS: 0.1,
-  /** speed check: max board angle across the velocity, and yaw rate to get there */
-  CHECK_ANGLE: 80 * DEG,
-  CHECK_YAW_RATE: 6,
-  /** heel edge angle during a speed check: 15° + 20°·intensity */
-  CHECK_EDGE_MIN: 15 * DEG,
-  CHECK_EDGE_GAIN: 20 * DEG,
+  /**
+   * Speed check (docs/research 09, Komissarov 2021): as soon as it is pressed the board pivots fully
+   * across the direction of travel (90°, heel edge) in ~0.25 s; the intensity is how hard the rider
+   * sits on the heels = edge angle Ψ from CHECK_EDGE_MIN (pressed) to CHECK_EDGE_MAX (pad all the way
+   * down). Braking force = N·tanΨ·sinγ: across a slope α the rider slows only if Ψ > α, so a full check
+   * (65°) stops him even on the 35° drop-in, while a light one (25°) only brakes on gentle slopes.
+   */
+  CHECK_ANGLE: 90 * DEG,
+  CHECK_YAW_RATE: 6.3,
+  CHECK_EDGE_MIN: 25 * DEG,
+  CHECK_EDGE_MAX: 65 * DEG,
   /** keyboard: intensity ramp while B is held (s from 0 to 1) */
   CHECK_RAMP: 0.6,
 } as const;
@@ -75,9 +74,13 @@ export const APPROACH = {
   S_TIME: 2.0,
   /** shortest line the rider can squeeze (m) */
   S_MIN: 6,
-  /** widest offset from the kicker axis (m): 0.5 m + 1.0 m·power (research: ~1–2 m on big air) */
-  OFFSET_MIN: 0.5,
-  OFFSET_GAIN: 1.0,
+  /**
+   * Widest offset from the kicker axis (m): 1.2 m + 0.4 m·power. Coaches use the same entry line for
+   * every spin (docs/research 09): the S barely grows, the spin size comes from the shoulders (Phase 3).
+   * Same length for every power, so the right moment to start is the same for every spin.
+   */
+  OFFSET_MIN: 1.2,
+  OFFSET_GAIN: 0.4,
   /** early: curvature of the takeoff-edge carve after the S, as a fraction of the clean grip limit */
   GRIP_USE: 0.7,
   HOLD_EARLY: 1.3,
@@ -102,6 +105,8 @@ export const POP = {
   SPEED: 1.2,
   /** release within this time before the lip = perfect pop */
   WINDOW: 0.18,
+  /** charge resolution: 1 % steps (finger noise ≈ 1.5 mm > a 5 % band; docs/research 10) */
+  STEP: 0.01,
   /** keyboard: charge ramp speed (1/s) */
   KEY_RATE: 0.8,
 } as const;
