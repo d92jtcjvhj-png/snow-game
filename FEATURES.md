@@ -1,10 +1,54 @@
 # FEATURES — Snow Game
 
-Inventario di **tutto ciò che il gioco ha oggi**, ricavato da `legacy/index.html`
+Legenda: ✅ funziona · ⚠️ presente nel codice ma non raggiungibile / non usato · ❌ assente
+
+# Parte A — Nuovo motore (`src/`)
+
+Stato: **Fase 1, scheletro**. Il gioco vero è ancora solo nel legacy (Parte B).
+
+## A1. Stack e struttura
+- ✅ Vite 8 + TypeScript strict + three `0.187.0` + `@dimforge/rapier3d-compat 0.21.0`, versioni pinnate esatte.
+- ✅ Cartelle `src/core`, `src/physics`, `src/world`, `src/render`, `src/ui`.
+- ✅ Regole di progetto in `CLAUDE.md`.
+
+## A2. Fisica
+- ✅ Rapier inizializzato (WASM incluso nel bundle), gravità 9,81.
+- ✅ Loop a passo fisso 1/120 s con accumulatore, limite di 0,05 s per frame e interpolazione al render.
+- ✅ Pendio piano a 15° (collider box), attrito neve μ 0,06.
+- ✅ Cubo da ~75 kg che scivola sul pendio, con una leggera rotazione iniziale. Torna in cima quando arriva in fondo.
+- ❌ Attrito anisotropo, curva sulla lamina, drag per posa, rider, kicker: da fare.
+
+## A3. Grafica
+- ✅ Stile low-poly cartoon: flat shading, palette del legacy, abeti e montagne low-poly con seed fisso, nebbia.
+- ✅ Luce emisferica + sole; ombre reali solo in qualità *high*.
+- ✅ Camera che segue il cubo dall'alto di lato, con smorzamento.
+- ✅ **Qualità adattiva**:
+  - Livelli low / medium / high: pixel ratio 1 / 1,5 / 2, ombre off / off / on.
+  - Livello iniziale scelto dal dispositivo.
+  - Scende se il frame resta > 20 ms per 2 s; sale se resta < 12 ms per 5 s.
+  - L'antialias è deciso solo all'avvio.
+
+## A4. Interfaccia e comandi
+- ✅ HUD: velocità km/h, fps, livello di qualità, bottone **Reset** (anche tasto **R**).
+- ❌ Menu, comandi di gioco, suoni: da fare.
+
+## A5. Test e deploy
+- ✅ Test Vitest headless (`tests/cube-slope.test.ts`):
+  - il cubo scende, non attraversa il pendio, non dà NaN;
+  - l'accelerazione corrisponde a g(sin α − μ cos α);
+  - la simulazione è deterministica;
+  - il reset funziona;
+  - il loop fa i passi giusti.
+- ✅ GitHub Actions: typecheck + test + build a ogni push; deploy su GitHub Pages a ogni push su `main`.
+- ⚠️ Il bundle è grande (~4,9 MB, 1,8 MB gzip): Rapier compat include il WASM in base64. Da ottimizzare più avanti.
+
+---
+
+# Parte B — Prototipo legacy (`legacy/index.html`)
+
+Inventario di **tutto ciò che il prototipo ha oggi**, ricavato da `legacy/index.html`
 (prototipo "Big Air Lab", file unico HTML + three.js r128 da CDN, ~1250 righe).
 Il file legacy non va modificato: è il riferimento di comportamento.
-
-Legenda: ✅ funziona · ⚠️ presente nel codice ma non raggiungibile / non usato · ❌ assente
 
 ---
 
