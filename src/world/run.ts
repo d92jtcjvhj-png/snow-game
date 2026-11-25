@@ -138,7 +138,7 @@ export class Run {
         // the set-up carve starts as soon as the charge has a side
         if (!this.approach.active && this.power > 0) {
           const side = inp.charge > 0 ? 1 : -1;
-          this.approach.start(side, BA.kickerBase - p0.z, v, this.s, b.aN);
+          this.approach.start(side, LM.zLip - p0.z, v, this.s, b.aN, p0.x);
         }
       }
       if (released && this.chargeOn) {
@@ -156,8 +156,7 @@ export class Run {
           this.kind = kind;
         }
       }
-      const onRamp = p0.z >= BA.kickerBase;
-      const cmd = this.approach.command(this.s, onRamp, this.power, v, b.aN, b.travelHeading());
+      const cmd = this.approach.command(this.s, this.power, v, b.aN, b.travelHeading(), p0.x);
       this.approachPhase = cmd.phase;
       b.preStep({ kappa: cmd.kappa, edge: cmd.edge, brake: inp.brake, tuck: this.chargeOn }, dt);
       this.world.step();

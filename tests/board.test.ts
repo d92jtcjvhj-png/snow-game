@@ -71,6 +71,19 @@ describe('board on the snow', () => {
     expect(decel(0)).toBeLessThan(0);
   });
 
+  it('a full speed check slows the rider down even on the 35° drop-in; pressing alone (50%) brakes on the approach', () => {
+    const dv = (angle: number, brake: number) => {
+      const { b, step } = setup(angle * DEG, 18);
+      for (let i = 0; i < 30; i++) step({ ...NONE, brake });
+      const v0 = b.speed();
+      for (let i = 0; i < 120; i++) step({ ...NONE, brake });
+      return v0 - b.speed();
+    };
+    expect(dv(35, 1)).toBeGreaterThan(1.5);
+    expect(dv(12, 1)).toBeGreaterThan(6);
+    expect(dv(12, 0.5)).toBeGreaterThan(2.5);
+  });
+
   it('speed check does not push the rider sideways', () => {
     const { b, step } = setup(12 * DEG, 18);
     for (let i = 0; i < 120; i++) step({ ...NONE, brake: i < 60 ? 1 : 0 });

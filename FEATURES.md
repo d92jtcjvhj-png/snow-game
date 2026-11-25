@@ -23,7 +23,7 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
 - ✅ Mesh three e collider trimesh di Rapier nascono dalla stessa griglia h(x, z).
 - ✅ Velocità tarate sui dati reali:
   - senza speed check si stacca a ~62 km/h e si atterra lunghi (~18 m dopo il knuckle);
-  - con ~8 m di speed check si stacca a ~56 km/h e si atterra 6 m dopo il knuckle, con 2,4 s di volo.
+  - con ~5 m di speed check a pieno si stacca a ~56 km/h e si atterra nello sweet spot dopo il knuckle, con ~2,4 s di volo.
 
 ## A3. Fisica della neve (`src/physics`)
 - ✅ Loop a passo fisso 1/120 s con interpolazione, deterministico.
@@ -32,7 +32,7 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
   - Rapier integra il corpo; le collisioni con oggetti (rail, reti) arriveranno con lui.
 - ✅ **Attrito anisotropo**:
   - longitudinale μ 0,06;
-  - laterale da 0,12 (base piatta) a 1,0 (lamina ≥ 20°);
+  - laterale da 0,12 (base piatta) a 1,3 (lamina ≥ 20°; ricerca: tetto ~1,5–2 g su neve dura);
   - oltre il limite di presa la tavola **derapa** (μ 0,6) e perde velocità.
 - ✅ **Curva sulla lamina**:
   - curvatura limitata dalla presa: v²κ ≤ μ·a_n;
@@ -41,9 +41,11 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
 - ✅ Carico normale con la curvatura del terreno: transizione del kicker, uscita dell'atterraggio.
 - ✅ Resistenza aerodinamica ½ρCdA v², CdA 0,5 (0,38 quando ti accucci per caricare).
 - ✅ **Speed check analogico**:
-  - la tavola va di traverso fino a 80° × intensità, sulla lamina di tallone;
-  - la neve frena lungo la direzione di marcia, quindi lo speed check non devia mai;
-  - toglie ~6 km/h ogni 8 m a pieno.
+  - la tavola va di traverso fino a 80° × intensità, sulla lamina di tallone (15° + 20° × intensità);
+  - più la lamina è piantata, più gratta: attrito di derapata da 0,6 fino a 0,95 (ricerca: hockey stop ~7–10 m/s²);
+  - premere il pad = speed check al 50%, trascinare giù = fino al 100%;
+  - a pieno rallenta anche sul drop-in a 35°; sull'approccio a 12° toglie ~6 m/s in un secondo;
+  - la neve frena lungo la direzione di marcia, quindi lo speed check non devia mai.
 - ✅ **Il giocatore non sterza mai.** Quando non c'è una curva, il rider riporta la tavola in linea con la marcia.
 
 ## A4. Curva automatica pre-salto (`src/physics/approach.ts`)
@@ -52,22 +54,20 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
   - frontside → tallone (heel);
   - backside → punta (toe);
   - straight air e flip dritti → base piatta, senza curva.
-- ✅ **S reale**, con curvatura nulla all'inizio e alla fine:
-  - frontside: tallone → punta (curva d'impostazione verso il lato del kicker) → tallone;
+- ✅ **Linea reale vista dall'alto** (ricerca `docs/research/07`), come una S larga e piatta:
+  - frontside: tallone (ti porta fuori di lato) → punta (curva d'impostazione, ti riporta verso l'asse) → tallone, che continua sul kicker;
   - backside: lo stesso, a specchio;
-  - finisce dritta, in linea, alla base del kicker;
-  - dall'ultimo cambio di spigolo il rider si mette progressivamente sulla lamina di stacco e la **tiene visibilmente su tutto il kicker** (15° + 15° × potenza, fino a 30°), senza curvare: è la piattaforma da cui stacca.
-- ✅ **S fluida, in carving pulito**:
-  - la lamina passa da un lato all'altro in modo continuo;
-  - nel punto più stretto la S usa il 70% della presa disponibile alla velocità di quel momento, quindi se il tempismo è giusto non derapa mai;
-  - a velocità alta la S è più dolce, come nella realtà (raggi 20–100 m);
-  - **più carica = S più ampia** (dal 40% al 100% di quell'ampiezza) e lamina più inclinata (fino a ~40°);
-  - lo scostamento laterale è piccolo (~0,2–0,4 m): a queste velocità una curva d'impostazione vera è appena accennata.
-- ✅ Durata naturale della S: **1,5 s** alla velocità del momento (~30 m a 75 km/h): si carica ~2,2 s prima del labbro. Prima della rampa il rider corregge la linea a occhio; sulla rampa non può più.
-- ✅ **Tempismo** (finestra "giusto": ±0,2 s):
-  - **giusto**: uscita dritta, errore ~0,5°, deriva < 0,5 m;
-  - **presto**: la S finisce prima, il rider si mette sulla lamina di stacco e carva di traverso. Presto di 0,35 s: 4° e 3 m di deriva. Presto di 0,6 s: 5,6° e 4,4 m. Presto di 1 s: manchi il kicker. Uscire di lato non vuol dire cadere;
-  - **tardi**: S schiacciata; pop e aiuto della curva alla rotazione calano in modo graduale (tardi di 0,35 s: 91%; 0,6 s: 84%; 1 s: 73%, con derapata).
+  - arriva **parallela all'asse e centrata proprio al labbro**;
+  - dall'ultimo cambio di spigolo il rider si mette progressivamente sulla lamina di stacco e la **tiene visibilmente su tutto il kicker** (15° + 15° × potenza, fino a 30°).
+- ✅ **Più carica = linea più larga**: scostamento massimo dall'asse 0,5 m + 1 m × potenza, cioè ~1,5 m a carica piena (ricerca: 1–2 m nel big air). Archi di raggio ~30–50 m, ~1 g laterale: a quelle velocità il carving puro sulla sciancratura è impossibile.
+- ✅ Il rider **segue la linea** prevista, sia in posizione sia in direzione: se la potenza cambia mentre la curva è in corso (tastiera, o dito che trascina ancora), la linea si adatta e torna comunque in asse alla fine della S.
+- ✅ Durata naturale della linea: **2 s fino al labbro** alla velocità del momento (~40 m a 72 km/h; ricerca: 25–40 m). La fascia gialla è nello stesso punto di prima.
+- ✅ **Il labbro taglia la linea dove capita** (ricerca `docs/research/08`): la linea ha lunghezza fissa dall'inizio della carica e il rider non la adatta al kicker. **Punto di stacco, angolo d'uscita e lamina dipendono solo da quando inizi a caricare** e da quanto carichi (S più larga = effetto più forte).
+- ✅ **Tempismo** (finestra "giusto": ±0,2 s), frontside 100%:
+  - **giusto**: la S finisce al labbro: centro, dritto, sulla lamina di stacco;
+  - **presto**: la S finisce prima e il rider continua a curvare sulla lamina di stacco: esce in diagonale nel verso dello spin. Presto di 0,25 / 0,5 / 1 s: +3 / +6 / +8°, fino a 1,5 m dal centro, deriva 2–5 m;
+  - **tardi**: il labbro cade dentro la S, quindi esce di traverso contro lo spin. Tardi di 0,25 / 0,5 s: −2 / −6°. Tardi di 0,75 s: sei a metà del cambio di lamina, base piatta, pop al 75%. Tardi di 1 s: ancora largo, 1,5 m di lato;
+  - uscire di lato non vuol dire cadere: il giudizio dell'atterraggio arriva in Fase 3.
 - ✅ **Rilascio prima del kicker** = carica annullata: il rider si raddrizza.
 
 ## A5. Stacco e volo
@@ -122,11 +122,11 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
 - ❌ Suoni: da fare.
 
 ## A9. Test e deploy
-- ✅ 25 test Vitest headless:
+- ✅ 29 test Vitest headless:
   - `snow`: sciancratura, anisotropia, presa limitata, derapata;
   - `board`: rettilineo, curva, traverso, speed check, determinismo;
   - `bigair`: geometria FIS, mesh uguale al collider, velocità e sweet spot, riproducibilità;
-  - `approach`: giusto, presto, tardi, potenza, frontside/heel, backside/toe, straight e flip piatti, niente pop senza rilascio;
+  - `approach`: giusto, presto, tardi (verso opposto), molto tardi (lamina non settata), potenza, frontside/heel, backside/toe, straight e flip piatti, niente pop senza rilascio;
   - `loop`.
 - ✅ GitHub Actions: typecheck + test + build a ogni push; deploy su GitHub Pages da `main`.
 - ⚠️ Il bundle è grande (~1,8 MB gzip), soprattutto per il WASM di Rapier: da ottimizzare.

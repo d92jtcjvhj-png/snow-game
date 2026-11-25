@@ -98,7 +98,7 @@ async function main() {
     if (pred) { landing.set(pred.x, pred.y, pred.z); Markers.place(markers.ring, pred.x, pred.y, pred.z, pitchAt(pred.z)); }
     let msg = '', big = false;
     if (run.phase === 'ride' && started) {
-      const v = b.speed(), zIdeal = BA.kickerBase - v * APPROACH.S_TIME;
+      const v = b.speed(), zIdeal = LM.zLip - v * APPROACH.S_TIME;
       const showBand = assist.indicators && !run.approach.active && p.z < zIdeal + 4;
       markers.band.visible = showBand;
       if (showBand) Markers.place(markers.band, 0, heightAt(0, zIdeal), zIdeal, pitchAt(zIdeal));

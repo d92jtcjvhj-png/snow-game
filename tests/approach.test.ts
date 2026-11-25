@@ -11,18 +11,21 @@ beforeAll(async () => { R = await initRapier(); run = new Run(R, buildTerrainGri
 
 /**
  * Same speed every time: speed check 60–63 m, then the charge starts `early` seconds before (or after, if
- * negative) the ideal moment, i.e. when the time left to the kicker base equals the natural S duration.
+ * negative) the ideal moment, i.e. when the time left to the lip equals the natural line duration.
  */
-function jump(charge: number, early: number, axis = 0) {
+function jump(charge: number, early: number, axis = 0, ramp = 0) {
   run.reset();
-  let started = false;
+  let started = false, t0 = 0;
   let minX = 0, maxX = 0;
   while (run.phase !== 'done' && run.t < 40) {
     const p = run.board.position(), v = run.board.speed();
-    const tToBase = (BA.kickerBase - p.z) / Math.max(1, v);
-    if (!started && p.z > 63 && tToBase <= APPROACH.S_TIME + early) started = true;
+    const tToLip = (LM.zLip - p.z) / Math.max(1, v);
+    if (!started && p.z > 63 && tToLip <= APPROACH.S_TIME + early) started = true;
     const charging = started && p.z < LM.zLip - 1.5;
-    const inp: RunInput = { charging, charge: charging ? charge : 0, axis, brake: p.z > 60 && p.z < 63 ? 1 : 0 };
+    // ramp > 0: the charge grows while held (keyboard Z/X, or a finger still dragging)
+    const c = ramp > 0 ? Math.sign(charge) * Math.min(Math.abs(charge), 0.1 + ramp * (run.t - t0)) : charge;
+    if (!started) t0 = run.t;
+    const inp: RunInput = { charging, charge: charging ? c : 0, axis, brake: p.z > 60 && p.z < 63 ? 1 : 0 };
     run.step(inp);
     if (run.phase === 'ride' && p.z < BA.kickerBase) { minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x); }
   }
@@ -41,6 +44,12 @@ describe('automatic pre-jump carve (the player never steers)', () => {
     expect(tk.popQ).toBeGreaterThan(0.95);
   });
 
+  it('power growing during the S (keyboard ramp) still brings the rider back on the axis, straight', () => {
+    const { tk } = jump(1, 0, 0, 0.8);
+    expect(Math.abs(tk.x)).toBeLessThan(0.5);
+    expect(Math.abs(tk.headingDeg)).toBeLessThan(2);
+  });
+
   it('on time: backside → toe', () => {
     const { tk } = jump(-0.8, 0);
     expect(tk.edge).toBe('toe');
@@ -57,15 +66,28 @@ describe('automatic pre-jump carve (the player never steers)', () => {
     expect(ld.inLanding).toBe(true);
   });
 
-  it('too late: squeezed S → rushed edge change, skid, less pop and speed', () => {
-    const ok = jump(0.8, 0), late = jump(0.8, -1.0);
+  it('too late: the lip cuts the S — the rider exits on an angle the other way than when early', () => {
+    const early = jump(0.8, 0.5), late = jump(0.8, -0.5);
     expect(late.tk.timingLabel).toBe('tardi');
-    expect(late.tk.popQ).toBeLessThan(ok.tk.popQ - 0.15);
-    expect(late.tk.speed).toBeLessThan(ok.tk.speed);
+    expect(Math.abs(late.tk.headingDeg)).toBeGreaterThan(3);
+    expect(Math.sign(late.tk.headingDeg)).toBe(-Math.sign(early.tk.headingDeg));
   });
 
-  it('more power = wider set-up carve', () => {
-    expect(jump(1, 0).width).toBeGreaterThan(jump(0.3, 0).width * 1.3);
+  it('much too late: still in the middle of the edge change at the lip → no takeoff edge set, less pop', () => {
+    const { tk } = jump(1, -0.75);
+    expect(tk.edge).not.toBe(tk.edgeExpected);
+    expect(tk.popQ).toBeLessThan(0.9);
+  });
+
+  it('more power = bigger effect of a timing error', () => {
+    expect(Math.abs(jump(1, -0.5).tk.headingDeg)).toBeGreaterThan(Math.abs(jump(0.4, -0.5).tk.headingDeg) * 1.3);
+  });
+
+  it('more power = wider set-up line: ~1.5 m off the axis at full power (research: 1–2 m)', () => {
+    const full = jump(1, 0).width, low = jump(0.3, 0).width;
+    expect(full).toBeGreaterThan(1.2);
+    expect(full).toBeLessThan(2);
+    expect(full).toBeGreaterThan(low * 1.3);
   });
 
   it('straight air and straight flips: flat base, in line, no carve', () => {

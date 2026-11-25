@@ -20,12 +20,18 @@ export const SNOW = {
   MU_LONG: 0.06,
   /** lateral grip with a flat base: the board slides sideways easily */
   MU_LAT_FLAT: 0.12,
-  /** lateral grip with the edge set (>= EDGE_FULL): hardpack edge hold */
-  MU_LAT_EDGE: 1.0,
+  /** lateral grip with the edge set (>= EDGE_FULL): hardpack edge hold (research: ~1.5–2 g ceiling) */
+  MU_LAT_EDGE: 1.3,
   /** edge angle at which grip reaches MU_LAT_EDGE */
   EDGE_FULL: 20 * DEG,
-  /** sliding (skid) friction once the grip limit is exceeded: this is what brakes in a speed check */
+  /** sliding (skid) friction once the grip limit is exceeded */
   MU_SKID: 0.6,
+  /**
+   * speed check with the heel edge dug in (board across, edge ≥ CHECK_EDGE_FULL): the edge scrapes
+   * the snow and brakes much harder than a flat sideways slide — enough to slow down even on the 35° drop-in
+   */
+  MU_CHECK: 0.95,
+  CHECK_EDGE_FULL: 35 * DEG,
   /** park board sidecut radius (research: 7.6–8.4 m) */
   SIDECUT_R: 8,
   EDGE_MAX: 55 * DEG,
@@ -61,26 +67,27 @@ export const BOARD = {
  * kicker base ("set-up point"), edge held up the ramp. Starts when the player starts charging.
  */
 export const APPROACH = {
-  /** natural duration of the S at the speed the charge starts (s): starting this long before the kicker base is "on time" */
-  S_TIME: 1.5,
-  /** shortest S the rider can squeeze (m) */
-  S_MIN: 4,
   /**
-   * Size of the S: its sharpest point uses this fraction of the edge grip available at the speed the
-   * charge starts (a clean carve, never a skid when on time). Power scales it from POWER_MIN to 1.
-   * At 60–75 km/h a real set-up turn is gentle (radius 20–100 m, docs/research 05).
+   * Natural duration of the whole line, from the start of the charge to the LIP (s): the S, then the
+   * return arc on the takeoff edge that carries up the kicker and arrives parallel to the axis at the lip.
+   * Research: set-up starts ~25–40 m before the lip at big-air speed (docs/research 07).
    */
+  S_TIME: 2.0,
+  /** shortest line the rider can squeeze (m) */
+  S_MIN: 6,
+  /** widest offset from the kicker axis (m): 0.5 m + 1.0 m·power (research: ~1–2 m on big air) */
+  OFFSET_MIN: 0.5,
+  OFFSET_GAIN: 1.0,
+  /** early: curvature of the takeoff-edge carve after the S, as a fraction of the clean grip limit */
   GRIP_USE: 0.7,
-  POWER_MIN: 0.4,
-  /** after an early S, the rider keeps carving on the takeoff edge at this fraction of the S's last curvature */
   HOLD_EARLY: 1.3,
   /** ...fading out over this distance (m): the heading error stays, the turning stops */
   HOLD_LEN: 8,
-  /** line correction before the ramp: extra curvature per radian of heading error (1/m/rad) */
+  /** line following by eye: extra curvature per radian of heading error (1/m/rad)... */
   LINE_GAIN: 0.15,
-  /** on the ramp the edge is a platform: tiny residual curvature (1/m) */
-  RAMP_CURV: 1 / 2000,
-  /** platform edge angle on the ramp, clearly visible: 15° + 15°·power (the S hands over onto it) */
+  /** ...and per metre of lateral error (1/m²): critically damped with LINE_GAIN */
+  POS_GAIN: 0.0056,
+  /** takeoff-edge platform angle, clearly visible on the kicker: 15° + 15°·power */
   RAMP_EDGE: 15 * DEG,
   RAMP_EDGE_GAIN: 15 * DEG,
   /** timing tolerance shown as "on time" (s) */
