@@ -29,6 +29,20 @@ export interface ApproachCmd {
   phase: ApproachPhase;
 }
 
+/**
+ * Plan-view shape of the line, f(u) for u ∈ [0, 1] (max 1 at u = ½), with its derivatives:
+ * f = sin²(πu) − 2c·(1 − u)·sin²(2πu). A short opening to the OTHER side first (≈30 % of the big
+ * swing), then the big swing on the takeoff edge's side, then back onto the axis, parallel, at the lip,
+ * still carving on the takeoff edge (f''(1) = 2π² > 0). Smooth sine pieces: no straight bits.
+ */
+const OPEN = APPROACH.OPENING;
+export function lineShape(u: number): { f: number; d1: number; d2: number } {
+  const P = Math.PI, s1 = Math.sin(P * u) ** 2, s1d = P * Math.sin(2 * P * u), s1dd = 2 * P * P * Math.cos(2 * P * u);
+  const s2 = Math.sin(2 * P * u) ** 2, s2d = 2 * P * Math.sin(4 * P * u), s2dd = 8 * P * P * Math.cos(4 * P * u);
+  const g = (1 - u) * s2, gd = -s2 + (1 - u) * s2d, gdd = -2 * s2d + (1 - u) * s2dd;
+  return { f: s1 - 2 * OPEN * g, d1: s1d - 2 * OPEN * gd, d2: s1dd - 2 * OPEN * gdd };
+}
+
 export class Approach {
   active = false;
   side: -1 | 0 | 1 = 0;
@@ -88,9 +102,9 @@ export class Approach {
     const cmd = this.plan(s, power);
     const u = (s - this.s0) / this.L;
     if (cmd.phase === 'setup') {
-      const X = this.side * this.offset(power), w = 2 * Math.PI * u;
-      this.psiRef = (X * Math.PI * Math.sin(w)) / this.L;
-      const xRef = this.x0 + X * Math.sin(Math.PI * u) ** 2;
+      const X = this.side * this.offset(power), sh = lineShape(u);
+      this.psiRef = (X * sh.d1) / this.L;
+      const xRef = this.x0 + X * sh.f;
       cmd.kappa += APPROACH.LINE_GAIN * (this.psiRef - travel) + APPROACH.POS_GAIN * (xRef - x);
     } else {
       // early: the planned line is over; the extra carve turns the rider off the line on purpose
@@ -99,9 +113,9 @@ export class Approach {
     }
     this.sLast = s;
     cmd.edge = edgeForCurvature(cmd.kappa, v, aN);
-    // hand-over: from the last edge change (u = ¾) the rider rolls progressively onto the takeoff edge
-    // and keeps it, clearly, up the kicker
-    const wgt = cmd.phase === 'hold' ? 1 : smoothstep((u - 0.75) / 0.2);
+    // hand-over: from the last edge change (u ≈ 0.64) the rider rolls progressively onto the takeoff
+    // edge and keeps it, clearly, up the kicker
+    const wgt = cmd.phase === 'hold' ? 1 : smoothstep((u - 0.66) / 0.2);
     const plat = wgt * (APPROACH.RAMP_EDGE + APPROACH.RAMP_EDGE_GAIN * power);
     // blend in only from the hand-over on (a plain max/min here kept the board FLAT during the whole
     // set-up carve on the opposite edge: that was the "turn – straight – turn" feeling)
@@ -118,22 +132,19 @@ export class Approach {
   private plan(s: number, power: number): ApproachCmd {
     const u = (s - this.s0) / this.L;
     // Linked turns are close to a sine wave (docs/research 11): no straight bits, curvature crossing
-    // zero only for an instant. Path x(u) = side·X·sin²(πu): out on the takeoff edge's side, back
-    // with the set-up carve, onto the axis at u = 1, still carving on the takeoff edge up the kicker
-    // ("carve up and off the lip"). Curvature κ = side·X·2π²·cos(2πu)/L²: quarter turn out, half turn
-    // back, quarter turn onto the takeoff edge, same amplitude, half the peak curvature of the old S.
-    // A short ramp-in avoids a curvature step when the charge starts.
+    // zero only for an instant. Path x(u) = side·X·f(u) (see lineShape): opening to the other side,
+    // big swing on the takeoff edge's side, back onto the axis at u = 1, still carving on the takeoff
+    // edge up the kicker ("carve up and off the lip"). A short ramp-in avoids a curvature step.
     if (u < 1) {
       const X = this.side * this.offset(power);
-      const kappa = ((X * 2 * Math.PI ** 2) / (this.L * this.L)) * Math.cos(2 * Math.PI * u) * smoothstep(u / 0.08);
+      const kappa = ((X * lineShape(u).d2) / (this.L * this.L)) * smoothstep(u / 0.08);
       return { kappa, edge: 0, phase: 'setup' };
     }
-    // the line is over before the lip (early): the rider keeps carving on the takeoff edge, from the
-    // curvature he already had, turning more and more across the approach
-    const extra = s - this.s0 - this.L;
+    // the line is over before the lip (early): the rider simply keeps the carve he had at the end of
+    // the S on the takeoff edge ("turning too much in the lip"); the extra heading builds up with how
+    // early he is, up to HOLD_MAX, then he runs on at that angle. Monotonic: earlier = more off.
     const kEnd = (this.offset(power) * 2 * Math.PI ** 2) / (this.L * this.L);
-    const grow = Math.max(kEnd, this.kLim * APPROACH.HOLD_EARLY * smoothstep(extra / 4));
-    const kappa = this.side * grow * Math.exp(-extra / APPROACH.HOLD_LEN);
+    const kappa = Math.abs(this.holdPsi) < APPROACH.HOLD_MAX ? this.side * kEnd : 0;
     return { kappa, edge: 0, phase: 'hold' };
   }
 

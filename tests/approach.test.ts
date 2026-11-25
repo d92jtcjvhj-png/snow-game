@@ -66,20 +66,20 @@ describe('automatic pre-jump carve (the player never steers)', () => {
   });
 
   it('too late: the lip cuts the S — the rider exits on an angle the other way than when early', () => {
-    const early = jump(0.8, 0.5), late = jump(0.8, -0.5);
+    const early = jump(0.8, 0.5), late = jump(0.8, -1.0);
     expect(late.tk.timingLabel).toBe('tardi');
     expect(Math.abs(late.tk.headingDeg)).toBeGreaterThan(3);
     expect(Math.sign(late.tk.headingDeg)).toBe(-Math.sign(early.tk.headingDeg));
   });
 
   it('much too late: still in the middle of the edge change at the lip → no takeoff edge set, less pop', () => {
-    const { tk } = jump(1, -0.9);
+    const { tk } = jump(1, -1.4);
     expect(tk.edge).not.toBe(tk.edgeExpected);
     expect(tk.popQ).toBeLessThan(0.9);
   });
 
   it('more power = a slightly bigger effect of a timing error', () => {
-    expect(Math.abs(jump(1, -0.5).tk.headingDeg)).toBeGreaterThan(Math.abs(jump(0.4, -0.5).tk.headingDeg) * 1.1);
+    expect(Math.abs(jump(1, -1.0).tk.headingDeg)).toBeGreaterThan(Math.abs(jump(0.4, -1.0).tk.headingDeg) * 1.1);
   });
 
   it('a speed check during the set-up ruins the line: it restarts later and the exit is off', () => {

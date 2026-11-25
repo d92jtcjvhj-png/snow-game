@@ -55,20 +55,22 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
   - frontside → tallone (heel);
   - backside → punta (toe);
   - straight air e flip dritti → base piatta, senza curva.
-- ✅ **Linea reale vista dall'alto, fluida** (ricerche `docs/research/07` e `11`): una S **sinusoidale**, senza tratti dritti, come le curve collegate vere:
-  - frontside: tallone (ti porta fuori di lato) → punta (curva d'impostazione, ti riporta verso l'asse) → tallone, che continua sul kicker ("carve up and off the lip");
-  - la lamina cresce e cala in modo continuo (es. tallone 32° → punta −30° → tallone 28°), mai piatta a metà curva;
-  - backside: lo stesso, a specchio;
-  - arriva **parallela all'asse e centrata al labbro**, ancora in curva sulla lamina di stacco, che resta ben visibile su tutto il kicker.
-- ✅ **Stessa linea per tutti gli spin** (ricerca 09: i coach usano la stessa entrata; lo spin nasce dalle spalle, Fase 3): lunghezza fissa, quindi il momento giusto è uguale per tutti; la larghezza cresce poco con la carica, da 1,5 m a 1,9 m dall'asse (curve ampie). Archi di raggio ~85 m, ~0,6 g laterale: nessuna derapata.
+- ✅ **Linea reale vista dall'alto, fluida e completa** (ricerche `docs/research/07` e `11`): curve sinusoidali, senza tratti dritti, come le curve collegate vere. Frontside, rider regular:
+  - **apertura** breve dal lato opposto (~0,3 m, di punta);
+  - **curva grande** sul lato della lamina di stacco (di tallone, fino a 1,25–1,5 m dall'asse);
+  - **rientro** di punta verso l'asse;
+  - **tallone** sul kicker, ancora in curva ("carve up and off the lip"), parallelo all'asse e centrato al labbro;
+  - la lamina scorre in modo continuo (es. punta −21° → tallone 45° → punta −51° → tallone 30°), mai piatta a metà curva;
+  - backside: lo stesso, a specchio.
+- ✅ **Stessa linea per tutti gli spin** (ricerca 09: i coach usano la stessa entrata; lo spin nasce dalle spalle, Fase 3): lunghezza fissa, quindi il momento giusto è uguale per tutti; la larghezza cresce poco con la carica, da 1,25 m a 1,5 m dall'asse, dopo l'apertura iniziale. Fino a ~1,1 g laterale, lamina fino a 65° (ricerca: carving d'élite 66–71°): nessuna derapata.
 - ✅ **Carica a passi dell'1%** (ricerca 10): continua, con tacche ogni 25% (visive e vibrazione su Android).
 - ✅ Il rider **segue la linea** prevista, sia in posizione sia in direzione: se la potenza cambia mentre la curva è in corso (tastiera, o dito che trascina ancora), la linea si adatta e torna comunque in asse alla fine della S.
-- ✅ Durata naturale della linea: **2,5 s fino al labbro** alla velocità del momento (~55 m a 79 km/h).
+- ✅ Durata naturale della linea: **2,8 s fino al labbro** alla velocità del momento (~62 m a 79 km/h).
 - ✅ **Il labbro taglia la linea dove capita** (ricerca `docs/research/08`): la linea ha lunghezza fissa dall'inizio della carica e il rider non la adatta al kicker. **Punto di stacco, angolo d'uscita e lamina dipendono solo da quando inizi a caricare** e da quanto carichi (S più larga = effetto più forte).
 - ✅ **Tempismo** (finestra "giusto": ±0,2 s), frontside 100%:
   - **giusto**: la S finisce al labbro: centro, dritto, sulla lamina di stacco;
-  - **presto**: la S finisce prima e il rider continua a curvare sulla lamina di stacco: esce in diagonale nel verso dello spin. Presto di 0,25 / 0,5 / 1 s: +3 / +6 / +8°, fino a 1,5 m dal centro, deriva 2–5 m;
-  - **tardi**: il labbro cade dentro la S, quindi esce di traverso contro lo spin. Tardi di 0,25 / 0,5 s: −2 / −6°. Tardi di 0,75 s: sei a metà del cambio di lamina, base piatta, pop al 75%. Tardi di 1 s: ancora largo, 1,5 m di lato;
+  - **presto**: la S finisce prima e il rider continua la stessa curva sulla lamina di stacco ("gira troppo sul labbro"): esce in diagonale nel verso dello spin. Presto di 0,25 / 0,5 / 1 s: +3 / +6 / +12° (massimo), deriva 2,4 / 4,4 / 9 m;
+  - **tardi**: il labbro cade dentro la S, quindi esce di traverso contro lo spin. Tardi di 0,25 / 0,5 / 1 s: −1,4 / −2 / −6°. Tardi di 1,4 s: sei ancora nella curva grande, sulla lamina sbagliata, con meno pop;
   - uscire di lato non vuol dire cadere: il giudizio dell'atterraggio arriva in Fase 3.
 - ✅ **Rilascio prima del kicker** = carica annullata: il rider si raddrizza.
 

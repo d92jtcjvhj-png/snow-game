@@ -21,6 +21,8 @@ Ogni affermazione ha la sua fonte. Molte pagine erano bloccate dalla rete della 
 | `10-passo-della-carica.md` | Note: carica continua (passi dell'1%) con tacche ogni 25%, non fasce del 5%: il dito sbaglia di ~1,5 mm, più di una fascia |
 
 | `11-curve-fluide.md` | Note: curve collegate quasi sinusoidali (curvatura per lo zero solo un istante, niente tratti dritti), lamina che cresce e cala in modo progressivo, molla smorzata per l'inclinazione |
+| `12-trick-fase-3.md` | **Report Fase 3**: rotazioni in asse e fuori asse (cork, double/triple/quad, rodeo, misty, underflip, flip), momento angolare e inerzia, record al 2026 (BS 2340), giudizio FIS, cosa decide atterraggio pulito o caduta |
+| `12-note-*.md` | Note di base del report 12 (spin in asse, fuori asse, record e giudizio, esiti d'atterraggio) |
 
 **Scelta di design (utente) sul report 08.** Per il ritardo il report proponeva di tenere la S compressa. Si è scelto invece il modello "il labbro taglia la S": la linea ha lunghezza fissa dall'inizio della carica, e punto, angolo e lamina allo stacco dipendono solo da quando inizi a caricare e da quanto carichi. Nessun aggiustamento automatico.
 
