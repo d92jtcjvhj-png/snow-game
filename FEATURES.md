@@ -55,12 +55,12 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
   - frontside → tallone (heel);
   - backside → punta (toe);
   - straight air e flip dritti → base piatta, senza curva.
-- ✅ **Linea reale vista dall'alto** (ricerca `docs/research/07`), come una S larga e piatta:
-  - frontside: tallone (ti porta fuori di lato) → punta (curva d'impostazione, ti riporta verso l'asse) → tallone, che continua sul kicker;
+- ✅ **Linea reale vista dall'alto, fluida** (ricerche `docs/research/07` e `11`): una S **sinusoidale**, senza tratti dritti, come le curve collegate vere:
+  - frontside: tallone (ti porta fuori di lato) → punta (curva d'impostazione, ti riporta verso l'asse) → tallone, che continua sul kicker ("carve up and off the lip");
+  - la lamina cresce e cala in modo continuo (es. tallone 32° → punta −30° → tallone 28°), mai piatta a metà curva;
   - backside: lo stesso, a specchio;
-  - arriva **parallela all'asse e centrata proprio al labbro**;
-  - dall'ultimo cambio di spigolo il rider si mette progressivamente sulla lamina di stacco e la **tiene visibilmente su tutto il kicker** (15° + 15° × potenza, fino a 30°).
-- ✅ **Stessa linea per tutti gli spin** (ricerca 09: i coach usano la stessa entrata; lo spin nasce dalle spalle, Fase 3): lunghezza fissa, quindi il momento giusto è uguale per tutti; la larghezza cresce poco con la carica, da 1,5 m a 1,9 m dall'asse (curve ampie). Archi di raggio ~40 m, ~1–1,2 g laterale: a carica piena, nel punto più stretto, la tavola derapa leggermente (~1 km/h persa), come gli archi d'impostazione reali ad alta velocità.
+  - arriva **parallela all'asse e centrata al labbro**, ancora in curva sulla lamina di stacco, che resta ben visibile su tutto il kicker.
+- ✅ **Stessa linea per tutti gli spin** (ricerca 09: i coach usano la stessa entrata; lo spin nasce dalle spalle, Fase 3): lunghezza fissa, quindi il momento giusto è uguale per tutti; la larghezza cresce poco con la carica, da 1,5 m a 1,9 m dall'asse (curve ampie). Archi di raggio ~85 m, ~0,6 g laterale: nessuna derapata.
 - ✅ **Carica a passi dell'1%** (ricerca 10): continua, con tacche ogni 25% (visive e vibrazione su Android).
 - ✅ Il rider **segue la linea** prevista, sia in posizione sia in direzione: se la potenza cambia mentre la curva è in corso (tastiera, o dito che trascina ancora), la linea si adatta e torna comunque in asse alla fine della S.
 - ✅ Durata naturale della linea: **2,5 s fino al labbro** alla velocità del momento (~55 m a 79 km/h).
@@ -108,7 +108,7 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
 - ✅ Spruzzo di neve in derapata e nello speed check; il numero di particelle dipende dalla qualità.
 - ✅ Kicker leggermente azzurro, linea blu sul labbro, linea rossa sul knuckle, tacche ogni 5 m.
 - ✅ Bordi blu dell'atterraggio, bandierine, reti arancioni, cancello di partenza.
-- ✅ Camera laterale sul lato punta, un po' dietro, come nel legacy: si leggono bene lamina e inclinazione. **Mira sempre al rider**, a terra e in volo, con un piccolo anticipo nella direzione di marcia; in volo lo segue più da vicino e più veloce, così resta in quadro anche in verticale sul telefono. Resta sempre almeno 2 m sopra la neve.
+- ✅ Camera laterale sul lato punta, un po' dietro, come nel legacy: si leggono bene lamina e inclinazione. **Inquadratura rigida**: stessa posizione rispetto al rider a terra e in volo, mira esattamente su di lui e lo segue quasi senza ritardo, così durante il salto l'inquadratura non oscilla. Resta sempre almeno 2 m sopra la neve.
 - ✅ **Qualità adattiva**:
   - livelli low / medium / high: pixel ratio 1 / 1,5 / 2; ombre solo high; alberi 90 / 150 / 220; particelle 60 / 150 / 260;
   - scende se il frame resta > 20 ms per 2 s, sale se resta < 12 ms per 5 s.

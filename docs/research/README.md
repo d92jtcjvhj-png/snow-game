@@ -20,6 +20,8 @@ Ogni affermazione ha la sua fonte. Molte pagine erano bloccate dalla rete della 
 | `09a-note-speed-check.md`, `09b-note-curva-e-spin.md` | Note di base del report 09 |
 | `10-passo-della-carica.md` | Note: carica continua (passi dell'1%) con tacche ogni 25%, non fasce del 5%: il dito sbaglia di ~1,5 mm, più di una fascia |
 
+| `11-curve-fluide.md` | Note: curve collegate quasi sinusoidali (curvatura per lo zero solo un istante, niente tratti dritti), lamina che cresce e cala in modo progressivo, molla smorzata per l'inclinazione |
+
 **Scelta di design (utente) sul report 08.** Per il ritardo il report proponeva di tenere la S compressa. Si è scelto invece il modello "il labbro taglia la S": la linea ha lunghezza fissa dall'inizio della carica, e punto, angolo e lamina allo stacco dipendono solo da quando inizi a caricare e da quanto carichi. Nessun aggiustamento automatico.
 
 Una ricerca sull'atterraggio fuori linea (quando si salva e quando si cade) è stata interrotta: va rifatta prima della Fase 3.

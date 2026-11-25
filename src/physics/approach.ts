@@ -3,11 +3,11 @@ import { edgeForCurvature } from './snow';
 import { smoothstep } from './vec';
 
 /**
- * Automatic pre-jump line (docs/research 01, 04, 06, 07). The player never steers: starting the charge
- * starts the rider's line. Real "gentle S", seen from above (frontside, regular; backside is mirrored):
- * a turn on the takeoff edge swings the rider out to one side of the kicker axis (up to ~1.5 m), the
- * set-up carve on the opposite edge brings him back, and the return arc on the takeoff edge carries
- * up the kicker ("carve up and off the lip") and arrives parallel to the axis, centred, at the lip.
+ * Automatic pre-jump line (docs/research 01, 04, 06, 07, 11). The player never steers: starting the
+ * charge starts the rider's line. Real "gentle S", seen from above (frontside, regular; backside is
+ * mirrored), as smooth as linked turns: a turn on the takeoff edge swings the rider out to one side of
+ * the kicker axis, the set-up carve on the opposite edge brings him back, and the takeoff edge carries
+ * him up the kicker ("carve up and off the lip"), parallel to the axis and centred at the lip.
  *
  * The line has a fixed length L = v·S_TIME from the moment the charge starts: the rider does NOT
  * adapt it to the kicker. The lip simply cuts the line wherever it falls (docs/research 08), so the
@@ -88,9 +88,9 @@ export class Approach {
     const cmd = this.plan(s, power);
     const u = (s - this.s0) / this.L;
     if (cmd.phase === 'setup') {
-      const A = (Math.PI * this.offset(power)) / this.Lnat, w = 2 * Math.PI * u;
-      this.psiRef = this.side * A * (Math.sin(w) - 0.5 * Math.sin(2 * w));
-      const xRef = this.x0 + (this.side * A * this.L) / (2 * Math.PI) * (1 - Math.cos(w) - 0.25 * (1 - Math.cos(2 * w)));
+      const X = this.side * this.offset(power), w = 2 * Math.PI * u;
+      this.psiRef = (X * Math.PI * Math.sin(w)) / this.L;
+      const xRef = this.x0 + X * Math.sin(Math.PI * u) ** 2;
       cmd.kappa += APPROACH.LINE_GAIN * (this.psiRef - travel) + APPROACH.POS_GAIN * (xRef - x);
     } else {
       // early: the planned line is over; the extra carve turns the rider off the line on purpose
@@ -99,11 +99,14 @@ export class Approach {
     }
     this.sLast = s;
     cmd.edge = edgeForCurvature(cmd.kappa, v, aN);
-    // hand-over: from the last edge change the rider rolls progressively onto the takeoff edge and
-    // keeps it, clearly, up the kicker
-    const wgt = cmd.phase === 'hold' ? 1 : smoothstep((u - 2 / 3) / 0.25);
+    // hand-over: from the last edge change (u = ¾) the rider rolls progressively onto the takeoff edge
+    // and keeps it, clearly, up the kicker
+    const wgt = cmd.phase === 'hold' ? 1 : smoothstep((u - 0.75) / 0.2);
     const plat = wgt * (APPROACH.RAMP_EDGE + APPROACH.RAMP_EDGE_GAIN * power);
-    cmd.edge = this.side > 0 ? Math.max(cmd.edge, plat) : Math.min(cmd.edge, -plat);
+    // blend in only from the hand-over on (a plain max/min here kept the board FLAT during the whole
+    // set-up carve on the opposite edge: that was the "turn – straight – turn" feeling)
+    const onTakeoffEdge = this.side > 0 ? Math.max(cmd.edge, plat) : Math.min(cmd.edge, -plat);
+    cmd.edge += wgt * (onTakeoffEdge - cmd.edge);
     return cmd;
   }
 
@@ -114,18 +117,24 @@ export class Approach {
 
   private plan(s: number, power: number): ApproachCmd {
     const u = (s - this.s0) / this.L;
-    // heading ψ(u) = side·A·(sin 2πu − ½ sin 4πu): curvature 0 at both ends, back on the axis and
-    // parallel at u = 1; offset x(u) = side·A·L/2π·[(1 − cos 2πu) − ¼(1 − cos 4πu)], widest (A·L/π) at u = ½.
-    // A is sized on the natural length for the wanted offset; squeezed into a shorter L (late), the
-    // same heading swing needs more curvature than the edge can hold.
-    const A = (Math.PI * this.offset(power)) / this.Lnat;
+    // Linked turns are close to a sine wave (docs/research 11): no straight bits, curvature crossing
+    // zero only for an instant. Path x(u) = side·X·sin²(πu): out on the takeoff edge's side, back
+    // with the set-up carve, onto the axis at u = 1, still carving on the takeoff edge up the kicker
+    // ("carve up and off the lip"). Curvature κ = side·X·2π²·cos(2πu)/L²: quarter turn out, half turn
+    // back, quarter turn onto the takeoff edge, same amplitude, half the peak curvature of the old S.
+    // A short ramp-in avoids a curvature step when the charge starts.
     if (u < 1) {
-      const k0 = (this.side * A * 2 * Math.PI) / this.L;
-      return { kappa: k0 * (Math.cos(2 * Math.PI * u) - Math.cos(4 * Math.PI * u)), edge: 0, phase: 'setup' };
+      const X = this.side * this.offset(power);
+      const kappa = ((X * 2 * Math.PI ** 2) / (this.L * this.L)) * Math.cos(2 * Math.PI * u) * smoothstep(u / 0.08);
+      return { kappa, edge: 0, phase: 'setup' };
     }
-    // the line is over before the lip (early): the rider keeps carving on the takeoff edge
+    // the line is over before the lip (early): the rider keeps carving on the takeoff edge, from the
+    // curvature he already had, turning more and more across the approach
     const extra = s - this.s0 - this.L;
-    const kappa = this.side * this.kLim * APPROACH.HOLD_EARLY * smoothstep(extra / 4) * Math.exp(-extra / APPROACH.HOLD_LEN);
+    const kEnd = (this.offset(power) * 2 * Math.PI ** 2) / (this.L * this.L);
+    const grow = Math.max(kEnd, this.kLim * APPROACH.HOLD_EARLY * smoothstep(extra / 4));
+    const kappa = this.side * grow * Math.exp(-extra / APPROACH.HOLD_LEN);
     return { kappa, edge: 0, phase: 'hold' };
   }
+
 }
