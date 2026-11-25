@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { APPROACH, BOARD, DEG } from './core/config';
 import { Input } from './core/input';
 import { FixedLoop } from './core/loop';
+import { GRAB_NAME } from './physics/spin';
 import { initRapier } from './physics/world';
 import { FollowCamera } from './render/camera';
 import { Markers } from './render/markers';
@@ -70,17 +71,28 @@ async function main() {
     qa.set(b.prevRot.x, b.prevRot.y, b.prevRot.z, b.prevRot.w);
     qb.set(r.x, r.y, r.z, r.w);
     rider.root.quaternion.slerpQuaternions(qa, qb, alpha);
+    // in the air the rider's orientation comes from the rotation model (takeoff frame × air rotation)
+    const aq = run.airOrientation();
+    if (aq) rider.root.quaternion.set(aq.x, aq.y, aq.z, aq.w);
     rider.root.position.copy(pos).addScaledVector(new THREE.Vector3(0, 1, 0).applyQuaternion(rider.root.quaternion), -BOARD.RADIUS);
-    const onGround = run.phase === 'ride' || run.phase === 'landed';
+    const onGround = run.phase !== 'air';
     const charging = run.phase === 'ride' && inp.charging;
+    const sp = run.spin, air = run.phase === 'air' && sp;
+    let twist = charging ? -Math.sign(inp.charge) * 0.7 * Math.abs(inp.charge) : 0;
+    if (air && sp.mode === 'spin') twist = sp.dir * (0.55 * Math.max(0, 1 - sp.airT / 0.45) + Math.min(90, sp.parked) * DEG);
+    else if (air && sp.mode === 'none') twist = -sp.shifty * 0.6 * DEG;
     rider.update({
       edge: b.grounded ? b.edge : 0,
-      crouch: run.phase === 'air' ? 0.5 : charging ? 0.7 : Math.min(0.6, inp.brake),
-      twist: charging ? -Math.sign(inp.charge) * 0.7 * Math.abs(inp.charge) : 0,
+      crouch: air ? (sp.grabbing ? 1 : sp.opened ? 0 : 0.6) : charging ? 0.7 : Math.min(0.6, inp.brake),
+      twist,
       arms: charging ? Math.abs(inp.charge) : 0,
-      airborne: run.phase === 'air',
+      airborne: !!air,
+      opened: !!air && sp.opened && !sp.grabbing,
+      grab: air ? sp.curGrab : null,
+      crash: run.phase === 'crash' || (run.phase === 'done' && run.landing?.quality === 'crash'),
     }, real);
 
+    const bv = b.velocity();
     // snow spray when skidding / speed check
     spray.budget = gfx.quality.tier === 'low' ? 60 : gfx.quality.tier === 'medium' ? 150 : 260;
     if (b.grounded && (b.skidding || inp.brake > 0.05) && b.speed() > 3) {
@@ -111,11 +123,27 @@ async function main() {
 
     controls.setGround(onGround);
     controls.barKnob(input.keyboardCharging && run.phase === 'ride' ? inp.charge : null);
-    const bv = b.velocity();
     cam.update(pos, run.phase === 'air', new THREE.Vector3(bv.x, bv.y, bv.z), real);
     gfx.follow(pos);
     gfx.quality.sample(real);
-    hud.update({ speed: b.speed(), edge: b.edge, grounded: b.grounded && run.phase !== 'air', charging, charge: inp.charge, axis: inp.axis, msg, bigMsg: big, fps: 1000 / gfx.quality.frameMs, tier: gfx.quality.tier });
+    // in the air: live trick text, board compass (board vs travel seen from above), "Apri ora!"
+    let airHud: { text: string; compassDeg: number | null; upsideDown: boolean } | null = null;
+    if (air && aq) {
+      const fwd = new THREE.Vector3(0, 0, 1).applyQuaternion(rider.root.quaternion), up = new THREE.Vector3(0, 1, 0).applyQuaternion(rider.root.quaternion);
+      let rel = (Math.atan2(fwd.x, fwd.z) - Math.atan2(bv.x, bv.z)) / DEG;
+      rel = ((rel + 540) % 360) - 180;
+      const live = sp.mode === 'spin' ? `${Math.round(Math.abs(sp.phi))}°` : sp.mode === 'flip' ? `${Math.round(Math.abs(sp.theta))}°` : '';
+      const grabTxt = sp.curGrab ? GRAB_NAME[sp.curGrab] : '';
+      airHud = assist.indicators
+        ? { text: [live, sp.inv ? `${sp.inv} inv.` : '', grabTxt].filter(Boolean).join(' · '), compassDeg: sp.mode !== 'none' ? rel : null, upsideDown: up.y < 0 }
+        : { text: grabTxt, compassDeg: null, upsideDown: false };
+      if (assist.indicators) {
+        if (sp.grabbing && sp.apex) { msg = 'Apri ora!'; big = true; }
+        else if (!sp.grabbing && !sp.opened && sp.airT < 0.7 && sp.mode !== 'none') msg = 'Grab: tieni un bottone';
+      }
+    }
+    run.tolerance = assist.tolerance;
+    hud.update({ speed: b.speed(), edge: b.edge, grounded: b.grounded && run.phase !== 'air', charging, charge: inp.charge, axis: inp.axis, msg, bigMsg: big, fps: 1000 / gfx.quality.frameMs, tier: gfx.quality.tier, air: airHud });
     gfx.renderer.render(gfx.scene, cam.camera);
   });
 

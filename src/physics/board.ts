@@ -43,6 +43,8 @@ export class Board {
   /** vertical curvature of the path (1/m, + concave) */
   private kv = 0;
   skidding = false;
+  /** +1 riding regular (nose first), −1 riding switch (tail first): set after a 180-type landing */
+  stance: 1 | -1 = 1;
   /** lateral acceleration felt by the rider (m/s², + towards +x): drives the visual lean */
   aLat = 0;
   /** board yaw rate (rad/s) */
@@ -70,7 +72,7 @@ export class Board {
 
   /** Place the board at rest on the surface at (x, y, z), pointing downhill. */
   reset(x: number, y: number, z: number): void {
-    this.psi = 0; this.edge = 0; this.kv = 0; this.aLat = 0; this.yawRate = 0;
+    this.psi = 0; this.edge = 0; this.kv = 0; this.aLat = 0; this.yawRate = 0; this.stance = 1;
     this.normal = v3(0, 1, 0);
     this.body.setTranslation({ x, y: y + BOARD.RADIUS, z }, true);
     this.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
@@ -180,7 +182,9 @@ export class Board {
 
       // yaw (when almost stopped, "travel" is the fall line)
       const fall = Math.atan2(this.normal.x, this.normal.z);
-      const travel = speed > 1 ? Math.atan2(v.x, v.z) : fall;
+      const travelDir = speed > 1 ? Math.atan2(v.x, v.z) : fall;
+      // the board's nose points along the travel when regular, against it when switch
+      const travel = this.stance < 0 ? wrap(travelDir + Math.PI) : travelDir;
       if (braking) {
         // fully across, on the heel edge (+ψ for a regular rider)
         const target = travel + BOARD.CHECK_ANGLE;

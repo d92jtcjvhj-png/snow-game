@@ -1,5 +1,6 @@
 import { POP } from '../core/config';
 import { vibrate, type Input } from '../core/input';
+import type { GrabId } from '../physics/spin';
 
 const PX_DEAD = 10, PX_FULL = 120, BAR_HALF = PX_FULL + 22, BRAKE_PX = 110;
 
@@ -15,6 +16,7 @@ export interface Controls {
  * - left half: free thumb. Hold = start charging (and the rider starts the set-up carve), drag sideways =
  *   spin side and power %, lift on the kicker = pop.
  * - right, on the snow: SPEED CHECK pad (hold and drag down: the further, the harder) + off-axis stick.
+ * - right, in the air: 4 grab buttons (Nose, Mute, Indy, Tail); the left thumb counter-rotates.
  */
 export function createControls(root: HTMLElement, input: Input): Controls {
   root.insertAdjacentHTML('beforeend', `
@@ -23,6 +25,10 @@ export function createControls(root: HTMLElement, input: Input): Controls {
     <div id="groundPad">
       <div id="brakePad"><div id="brakeFill"></div><span>Speed<br>check</span></div>
       <div id="stick"><div class="slbl up">Cork · Frontflip</div><div class="slbl dn">Misty/Rodeo · Backflip</div><div id="stickKnob"></div></div>
+    </div>
+    <div id="grabsPad" hidden>
+      <button class="gb" id="gNose" data-g="nose">Nose</button><button class="gb" id="gMute" data-g="mute">Mute</button>
+      <button class="gb" id="gIndy" data-g="indy">Indy</button><button class="gb" id="gTail" data-g="tail">Tail</button>
     </div>`);
   const $ = (id: string) => document.getElementById(id)!;
   const zoneL = $('zoneL'), bar = $('bar'), knob = $('barKnob');
@@ -88,6 +94,14 @@ export function createControls(root: HTMLElement, input: Input): Controls {
   const upS = (e: PointerEvent) => { if (e.pointerId !== S) return; S = null; t.stickActive = false; t.axis = 0; sKnob.style.transform = ''; };
   stick.addEventListener('pointerup', upS); stick.addEventListener('pointercancel', upS);
 
+  // grab buttons (hold): they tuck the rider and speed the spin up; letting go = opening up
+  const grabBtns = Array.from(document.querySelectorAll<HTMLButtonElement>('#grabsPad .gb'));
+  for (const el of grabBtns) {
+    el.addEventListener('pointerdown', (e) => { e.preventDefault(); el.setPointerCapture(e.pointerId); el.classList.add('on'); t.grab = el.dataset.g as GrabId; vibrate(5); });
+    const up = () => { el.classList.remove('on'); if (t.grab === el.dataset.g) t.grab = null; };
+    el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+  }
+
   document.addEventListener('gesturestart', (e) => e.preventDefault());
 
   let shown = true;
@@ -96,6 +110,8 @@ export function createControls(root: HTMLElement, input: Input): Controls {
       if (onGround === shown) return;
       shown = onGround;
       $('groundPad').hidden = !onGround;
+      $('grabsPad').hidden = onGround;
+      if (onGround) { t.grab = null; for (const el of grabBtns) el.classList.remove('on'); }
       if (!onGround) { B = null; t.brakeActive = false; setBrake(0); S = null; t.stickActive = false; t.axis = 0; sKnob.style.transform = ''; }
     },
     barKnob(dx) {

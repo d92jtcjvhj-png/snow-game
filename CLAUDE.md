@@ -22,21 +22,25 @@ Gioco di snowboard 3D per browser, PC e telefono. Stack: Vite + TypeScript stric
    - La curva pre-salto è automatica: parte quando inizia la carica (`src/physics/approach.ts`).
    - Le lamine di stacco sono quelle reali, nella tabella `TAKEOFF_EDGE` di `src/core/config.ts`: frontside → heel, backside → toe; straight e flip → base piatta.
    - Ogni scelta di tecnica si basa sulle ricerche in `docs/research/`. Le nuove ricerche vanno salvate lì.
-5. **Telefono prima.**
+5. **Rotazioni e atterraggio (Fase 3).**
+   - Il momento angolare si fissa al pop; in aria ω = L / I(posa): grab = raccolto, aperto = lento. Nessun tetto fisso (`src/physics/spin.ts`).
+   - L'asse cork è a rampa: piatto il primo mezzo giro, così inversioni = giri − 1.
+   - Atterraggio = fasce della ricerca 12 (`src/physics/landing.ts`) + fisica dopo il contatto: la tavola tiene il suo yaw, lo `stance` della tavola gestisce lo switch.
+6. **Telefono prima.**
    - Qualità adattiva obbligatoria (`src/render/quality.ts`): ogni effetto nuovo deve dichiarare in quale livello è attivo.
    - Target 60 fps su un telefono medio.
    - Ogni azione ha comando touch **e** tastiera; rispetta le safe-area.
-6. **Cartelle.**
+7. **Cartelle.**
    - `src/core`: loop, config, input.
    - `src/physics`: Rapier e forze; **non importa three**.
    - `src/world`: livelli (geometria pura in `bigair.ts`), run (`run.ts`, senza three, guidabile dai test), scena three (`scene.ts`).
    - `src/render`: renderer, camera, materiali, qualità.
    - `src/ui`: HUD e menu.
    - Mesh e collider nascono sempre dagli stessi dati.
-7. **Aggiorna sempre `FEATURES.md`** a ogni cambiamento visibile al giocatore o al motore, con la legenda ✅ / ⚠️ / ❌.
-8. **Prima di ogni commit:** `npm run typecheck && npm test && npm run build`. La fisica nuova va coperta da un test in `tests/` (Vitest, Node, senza browser).
-9. **Versioni pinnate esatte** in `package.json`, senza `^`. Si aggiornano solo su richiesta.
-10. Testi di gioco in italiano. Commenti nel codice in inglese.
+8. **Aggiorna sempre `FEATURES.md`** a ogni cambiamento visibile al giocatore o al motore, con la legenda ✅ / ⚠️ / ❌.
+9. **Prima di ogni commit:** `npm run typecheck && npm test && npm run build`. La fisica nuova va coperta da un test in `tests/` (Vitest, Node, senza browser).
+10. **Versioni pinnate esatte** in `package.json`, senza `^`. Si aggiornano solo su richiesta.
+11. Testi di gioco in italiano. Commenti nel codice in inglese.
 
 ## Comandi
 - `npm run dev`: server locale.
