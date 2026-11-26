@@ -24,7 +24,7 @@ Gioco di snowboard 3D per browser, PC e telefono. Stack: Vite + TypeScript stric
    - Ogni scelta di tecnica si basa sulle ricerche in `docs/research/`. Le nuove ricerche vanno salvate lì.
 5. **Rotazioni e atterraggio (Fase 3).**
    - Il momento angolare si fissa al pop; in aria ω = L / I(posa): grab = raccolto, aperto = lento. Nessun tetto fisso (`src/physics/spin.ts`).
-   - Due potenze: spin (carica, L) e spinta fuori asse (levetta, L_f). Il ribaltamento parte al pop insieme allo spin (un'unica rotazione fluida) e va chiuso a un giro intero prima di atterrare.
+   - Due potenze: spin (carica, L) e spinta fuori asse (levetta, L_f). Il ribaltamento parte al pop insieme allo spin (un'unica rotazione fluida) e va chiuso a un giro intero prima di atterrare. Le inversioni dipendono dallo spin (ricerca 17): al massimo floor((gradi − 180)/360); la levetta, dosata con precisione, fissa quanti ribaltamenti stanno nel volo previsto (troppa = oltre, poca = corto).
    - Atterraggio = fasce delle ricerche 12 e 13 (`src/physics/landing.ts`: yaw con rotazione residua col segno, pitch asimmetrico, lamina al contatto, impatto, zona) + fisica al contatto (impulso d'attrito, carico delle gambe, riallineamento lento, neve fresca); lo `stance` della tavola gestisce switch e revert.
 6. **Telefono prima.**
    - Qualità adattiva obbligatoria (`src/render/quality.ts`): ogni effetto nuovo deve dichiarare in quale livello è attivo.

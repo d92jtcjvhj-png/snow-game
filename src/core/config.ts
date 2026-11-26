@@ -158,13 +158,17 @@ export const SPIN = {
   /** the spin builds up over the first moments (shoulders lead, board follows), legacy */
   RAMP_IN: 0.28,
   /**
-   * Off-axis push (second power, the stick): flip rate around the lateral axis at 100 % in the neutral
-   * pose (°/s), on top of the spin. Little push = slow flipping (e.g. cork 1800 with one inversion),
-   * a lot = faster flipping (double, triple…). Same idea as the spin charge.
+   * Off-axis push (second power, the stick), docs/research 17: it sets how many flips fit in the
+   * flight, push·(nMax + ½), where nMax = floor((D − 180)/360) from the predicted spin degrees D.
+   * The flips are timed to close at FLIP_CLOSE of the flight in the reference pose. Little push with a
+   * big spin = cork 1080 (one inversion); the right amount closes whole flips, too much goes over.
    */
-  OFF_MAX: 390,
-  /** the weakest push still flips once over a whole flight: L_f ∝ OFF_MIN + (1 − OFF_MIN)·push */
-  OFF_MIN: 0.42,
+  FLIP_CLOSE: 0.85,
+  /** plausibility ceiling of the flip rate in the neutral pose (°/s) */
+  FLIP_CAP: 650,
+  /** spin below 540°: no inversion, the push only dips the axis by this much (°), little → full push */
+  DIP_MIN: 15,
+  DIP_MAX: 60,
   /** spotting: once opened, if the flip is within this many degrees of a whole flip the rider closes it */
   SPOT_WINDOW: 25,
   /** ...at this rate at least (°/s), legacy LEVEL_RATE */

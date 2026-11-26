@@ -30,7 +30,7 @@ describe('rotation in the air', () => {
     expect(sp.phi).toBeLessThan(0);
   });
 
-  it('second power: more off-axis push = more inversions in the same spin', () => {
+  it('second power: more off-axis push = more inversions in the same spin (up to what the spin allows)', () => {
     const run = (push: number) => {
       const sp = initSpin(0.8, -1, 0.2 + 0.8 * push, 1, 1);
       fly(sp, 2.3, 1.4);
@@ -162,6 +162,81 @@ describe('grabs and pose inertia (docs/research 15)', () => {
   it('is deterministic with the pose springs', () => {
     const a = hold(initSpin(0.9, 1, 0.6, 0.9, 0.5), 2.2, 'japan', 0.25, 1.5);
     const b = hold(initSpin(0.9, 1, 0.6, 0.9, 0.5), 2.2, 'japan', 0.25, 1.5);
+    expect(a).toEqual(b);
+  });
+});
+
+describe('off-axis composition (docs/research 17)', () => {
+  const T = 2.4;
+  /** the reference flight the plan assumes: grab 0.25 s → 70 %, then open */
+  const flyRef = (sp: SpinState) => {
+    for (let t = 0; t < T; t += STEP) stepSpin(sp, { grab: t >= 0.25 && t < 0.7 * T ? 'indy' : null, held: false, bar: 0 }, 9.81 * (T / 2 - t), STEP);
+    return sp;
+  };
+  /** stick value for a push fraction a (beyond the dead zone) */
+  const stick = (a: number) => 0.2 + 0.8 * a;
+  /** a charge whose predicted spin allows exactly `n` inversions */
+  const chargeFor = (n: number) => {
+    for (let p = 0.15; p <= 1; p += 0.01) if (initSpin(p, -1, stick(0.5), 1, 1, T).nMax === n) return p;
+    throw new Error('no charge for ' + n);
+  };
+
+  it('the most inversions follow the spin: floor((D − 180)/360)', () => {
+    for (const p of [0.25, 0.45, 0.7, 1]) {
+      const sp = initSpin(p, -1, stick(0.5), 1, 1, T);
+      const D = Math.round(Math.abs(flyRef(initSpin(p, -1, 0, 1, 1, T)).phi) / 180) * 180;
+      expect(sp.nMax).toBe(Math.max(0, Math.floor((D - 180) / 360)));
+    }
+  });
+
+  it('a small cork (one inversion allowed): the right push closes exactly one flip, never two', () => {
+    const p = chargeFor(1);
+    const right = flyRef(initSpin(p, -1, stick(2 / 3), 1, 1, T));
+    expect(right.flipDone).toBe(true);
+    expect(Math.abs(right.theta)).toBe(360);
+    expect(right.inv).toBe(1);
+    // full push goes over (about a flip and a half): no clean second inversion
+    const over = flyRef(initSpin(p, -1, stick(1), 1, 1, T));
+    expect(Math.abs(over.theta)).toBeGreaterThan(420);
+    expect(Math.abs(over.theta)).toBeLessThan(640);
+  });
+
+  it('cork 1080 with one inversion: lots of spin, little push; more push = double cork', () => {
+    const p = chargeFor(2);
+    const single = flyRef(initSpin(p, -1, stick(0.4), 1, 1, T));
+    expect(Math.abs(single.theta)).toBe(360);
+    expect(single.inv).toBe(1);
+    const dbl = flyRef(initSpin(p, -1, stick(0.8), 1, 1, T));
+    expect(Math.abs(dbl.theta)).toBe(720);
+    expect(dbl.inv).toBe(2);
+  });
+
+  it('the push has to be precise: a bit too little or too much does not close a whole flip', () => {
+    const p = chargeFor(2);
+    const short = flyRef(initSpin(p, -1, stick(0.3), 1, 1, T));
+    const long = flyRef(initSpin(p, -1, stick(0.95), 1, 1, T));
+    for (const sp of [short, long]) {
+      const r = Math.abs(sp.theta) % 360;
+      expect(Math.min(r, 360 - r)).toBeGreaterThan(SPIN.SPOT_WINDOW);
+    }
+  });
+
+  it('a spin below 540° cannot invert: the push only dips the axis and it comes back', () => {
+    const p = chargeFor(0);
+    const sp = initSpin(p, -1, stick(1), 1, 1, T);
+    let peak = 0;
+    for (let t = 0; t < T; t += STEP) {
+      stepSpin(sp, { grab: t >= 0.25 && t < 0.7 * T ? 'indy' : null, held: false, bar: 0 }, 9.81 * (T / 2 - t), STEP);
+      peak = Math.max(peak, Math.abs(sp.theta));
+    }
+    expect(sp.inv).toBe(0);
+    expect(peak).toBeGreaterThan(30);
+    expect(peak).toBeLessThanOrEqual(SPIN.DIP_MAX);
+    expect(sp.theta).toBe(0);
+  });
+
+  it('the plan is deterministic', () => {
+    const a = flyRef(initSpin(0.8, 1, 0.7, 0.9, 0.5, 2.2)), b = flyRef(initSpin(0.8, 1, 0.7, 0.9, 0.5, 2.2));
     expect(a).toEqual(b);
   });
 });
