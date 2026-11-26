@@ -26,7 +26,7 @@ export interface HudState {
   fps: number;
   tier: string;
   /** in the air: live trick text and compass (board vs travel, seen from above) */
-  air: { text: string; compassDeg: number | null; upsideDown: boolean } | null;
+  air: { text: string; compassDeg: number | null; upsideDown: boolean; tiltDeg?: number } | null;
 }
 
 export interface Hud {
@@ -38,30 +38,39 @@ export interface Hud {
 
 const EDGE: Record<string, string> = { heel: 'Tallone (heel)', toe: 'Punta (toe)', flat: 'Base piatta' };
 const side = (v: number) => (v > 0 ? 'lato tallone' : 'lato punta');
-const QUAL: Record<string, [string, string]> = {
-  perfect: ['Perfetto', 'q-perfect'], clean: ['Pulito', 'q-clean'], sketchy: ['Sporco', 'q-sketchy'], severe: ['Molto sporco', 'q-severe'], crash: ['Caduta', 'q-crash'],
+const OUTCOME: Record<string, [string, string]> = {
+  stomp: ['Stomp', 'q-perfect'], clean: ['Pulito', 'q-clean'], hand: ['Mano a terra', 'q-sketchy'],
+  twohands: ['Due mani', 'q-severe'], buttcheck: ['Butt check', 'q-severe'], revert: ['Revert', 'q-sketchy'], crash: ['Caduta', 'q-crash'],
 };
 const CAUSE: Record<string, (l: LandingRecord) => string> = {
   ok: (l) => (l.quality === 'perfect' ? 'Nello sweet spot, dritto e livellato.' : 'Atterraggio pulito.'),
-  yaw: (l) => (l.quality === 'crash' ? 'Tavola troppo di traverso: prendi la lamina a valle e cadi.' : 'Tavola non in linea: atterri derapando.'),
-  tilt: () => 'Asse non livellato: eri ancora inclinato.',
-  inverted: () => 'Atterri capovolto.',
+  yaw: (l) => (l.quality === 'crash' ? 'Tavola troppo di traverso.' : 'Tavola non in linea: atterri derapando e perdi velocità.'),
+  revert: () => 'Tavola molto storta, ma la rotazione residua ti porta a girare fino in fondo: revert, resti in piedi al contrario.',
+  pitchFwd: (l) => (l.quality === 'crash' ? 'Sbilanciato in avanti: caduta di punta.' : 'Sbilanciato in avanti: metti le mani avanti.'),
+  backseat: (l) => (l.quality === 'crash' ? 'Troppo indietro: cadi sulla schiena.' : 'Troppo indietro: ti siedi (butt check) e perdi velocità.'),
+  roll: () => 'Inclinato di lato: asse non raddrizzato.',
+  inverted: () => 'Atterri capovolto: il ribaltamento non era chiuso.',
   impact: (l) => (l.quality === 'crash' ? 'Impatto troppo duro.' : 'Atterraggio duro.'),
+  edge: () => 'Lamina a valle piantata mentre la tavola scivolava di lato: edge catch, vieni sbalzato.',
+  washout: () => 'Sui talloni con il peso dietro: la lamina scivola via (washout).',
   knuckle: () => 'Atterri sul knuckle: la tavola ti butta in avanti.',
   table: () => 'Troppo corto: atterri sul tavolo.',
-  offpiste: (l) => (l.quality === 'crash' ? 'Fuori dalla pista preparata, di traverso nella neve fresca.' : 'Fuori dalla pista preparata, nella neve fresca.'),
+  offpiste: (l) => (l.quality === 'crash' ? 'Fuori dalla pista preparata: la punta si pianta nella neve fresca.' : 'Fuori dalla pista preparata, nella neve fresca: freni.'),
   nose: () => 'Atterri di punta, sbilanciato in avanti.',
 };
-/** a training tip from the main cause (legacy texts, updated) */
+/** a training tip from the main cause (legacy texts, updated with research 13) */
 function tipFor(l: LandingRecord, tk: TakeoffRecord): string {
-  if (l.quality === 'perfect' || l.quality === 'clean') return '';
-  if (l.cause === 'yaw' && l.realDeg) {
+  if (l.quality === 'perfect' || l.quality === 'clean') return l.grabHeld ? 'Hai tenuto il grab fino a terra: le gambe hanno meno corsa per assorbire.' : '';
+  if ((l.cause === 'yaw' || l.cause === 'revert') && l.realDeg) {
     const over = l.realDeg - l.deg > 0;
     return over ? 'Hai girato troppo: lascia il grab un po’ prima (o carica meno).' : 'Non hai chiuso la rotazione: tieni il grab un po’ di più, o carica di più.';
   }
-  if (l.cause === 'tilt' || l.cause === 'inverted') return 'Eri ancora inclinato: lascia il grab prima, aprirti raddrizza l’asse.';
+  if (l.cause === 'inverted' || l.cause === 'roll') return 'Ribaltamento non chiuso: dosa la spinta fuori asse e apriti vicino al giro intero.';
+  if (l.cause === 'pitchFwd' || l.cause === 'nose') return 'Eri sbilanciato in avanti: apriti prima per raddrizzarti.';
+  if (l.cause === 'backseat' || l.cause === 'washout') return 'Eri troppo indietro: atterra con il peso centrato e la base piatta.';
+  if (l.cause === 'edge') return 'Atterra con la base piatta: una lamina a valle mentre scivoli di lato ti blocca.';
   if (l.cause === 'table' || l.cause === 'knuckle') return 'Sei arrivato corto: frena meno prima del kicker o fai un pop migliore.';
-  if (l.cause === 'impact' && l.dKnuckle > 10) return 'Sei arrivato lungo: fai uno speed check più deciso.';
+  if (l.cause === 'impact') return l.grabHeld ? 'Lascia il grab prima di toccare: le gambe hanno bisogno di corsa per assorbire.' : l.dKnuckle > 10 ? 'Sei arrivato lungo: fai uno speed check più deciso.' : 'Atterraggio duro.';
   if (l.cause === 'offpiste') return tk.timingLabel && tk.timingLabel !== 'giusto' ? `Curva d'impostazione ${tk.timingLabel}: sei uscito storto dal kicker.` : 'Sei uscito di lato dal kicker.';
   return '';
 }
@@ -152,7 +161,9 @@ export function createHud(root: HTMLElement, assist: Assist, h: { onStart(): voi
         compass.hidden = false;
         cBoard.style.transform = `rotate(${-rel}deg)`;
         compass.className = off <= 16 ? 'ok' : off <= 28 ? 'mid' : 'bad';
-        cTxt.textContent = s.air.upsideDown ? 'Capovolto' : off <= 8 ? 'In linea' : `${Math.round(off)}°`;
+        const tilt = s.air.tiltDeg ?? 0;
+        cTxt.textContent = s.air.upsideDown ? 'Capovolto' : tilt > 15 ? `Inclinato ${Math.round(tilt)}°` : off <= 8 ? 'In linea' : `${Math.round(off)}°`;
+        if (tilt > 15 && !s.air.upsideDown) compass.className = tilt > 40 ? 'bad' : 'mid';
       } else compass.hidden = true;
     },
     showIntro() { $('intro').hidden = false; },
@@ -166,9 +177,10 @@ export function createHud(root: HTMLElement, assist: Assist, h: { onStart(): voi
       } else {
         // trick and landing (Phase 3)
         $('cName').textContent = ld.trick;
-        const [label, cls] = QUAL[ld.quality]!;
+        const [label, cls] = OUTCOME[ld.outcome]!;
         chips.push(`<span class="chip ${cls}">${label}</span>`);
-        $('cNote').textContent = note || CAUSE[ld.cause]!(ld);
+        const okLanding = ld.quality === 'perfect' || ld.quality === 'clean';
+        $('cNote').textContent = note || (okLanding ? CAUSE.ok!(ld) : CAUSE[ld.cause]!(ld));
         const tip = tipFor(ld, tk);
         if (tip) { $('cTip').textContent = tip; $('cTip').hidden = false; }
         const ys = ld.yawSigned, off = Math.min(Math.abs(ys), 180 - Math.abs(ys));
@@ -183,7 +195,8 @@ export function createHud(root: HTMLElement, assist: Assist, h: { onStart(): voi
         rows.push(['Atterraggio', `${Math.abs(ld.dKnuckle).toFixed(1)} m ${ld.dKnuckle >= 0 ? 'dopo' : 'prima del'} knuckle${ld.dKnuckle >= 0 ? '' : ' (sul tavolo)'}${ld.inLanding || ld.dKnuckle < 0 ? '' : ', fuori pista'}`]);
         rows.push(['Impatto', `${ld.efh.toFixed(1)} m di caduta equivalente`]);
         rows.push(['Errore tavola (con rotazione residua)', `${ld.yawErr.toFixed(0)}°`]);
-        rows.push(['Inclinazione', `${ld.tiltErr.toFixed(0)}°`]);
+        rows.push(['Inclinazione', `${ld.pitch >= 0 ? 'avanti' : 'indietro'} ${Math.abs(ld.pitch).toFixed(0)}° · di lato ${Math.abs(ld.roll).toFixed(0)}°`]);
+        rows.push(['Lamina al contatto', Math.abs(ld.contactEdge) < 3 ? 'Base piatta' : `${ld.contactEdge > 0 ? 'Tallone' : 'Punta'} ${Math.abs(ld.contactEdge).toFixed(0)}°`]);
         rows.push(['Deriva in volo', Math.abs(ld.drift) < 0.3 ? 'Nessuna' : `${Math.abs(ld.drift).toFixed(1)} m verso il ${side(ld.drift)}`]);
         // takeoff (Phase 2)
         const edgeOk = tk.edge === tk.edgeExpected;

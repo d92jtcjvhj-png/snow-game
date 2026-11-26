@@ -64,8 +64,12 @@ describe('a whole jump (Phase 3)', () => {
     expect(run.landing!.trick).toMatch(/Cork/);
   });
 
-  it('after a crash the rider stops', () => {
-    jump(1, 9);
-    expect(['crash', 'severe', 'sketchy']).toContain(run.landing!.quality);
+  it('after a crash the rider slides to a stop; a clean landing keeps the speed', () => {
+    jump(0.45, 9);
+    expect(run.landing!.quality).toBe('crash');
+    expect(run.board.speed()).toBeLessThan(3);
+    jump(0.35, 0.7);
+    expect(['perfect', 'clean']).toContain(run.landing!.quality);
+    expect(run.board.speed()).toBeGreaterThan(15);
   });
 });

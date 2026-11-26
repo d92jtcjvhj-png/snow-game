@@ -120,3 +120,9 @@ export function onKicker(x: number, z: number): boolean {
 export function inLanding(x: number, z: number): boolean {
   return z >= LM.zKnuckle && z <= LM.zOutEnd && Math.abs(x) <= halfWidth(z);
 }
+
+/** Soft snow outside the prepared surface: 0 on the groomed run/landing, → 1 a metre beyond its edge. */
+export function softAt(x: number, z: number): number {
+  const over = Math.abs(x) - halfWidth(z);
+  return over <= 0 ? 0 : Math.min(1, over);
+}

@@ -17,6 +17,14 @@ import { Run, type RunInput } from './world/run';
 import { buildScene } from './world/scene';
 import { buildTerrainGrid } from './world/terrain';
 
+/** which way the rider falls, from the landing cause */
+function crashDir(cause: string | undefined): 'nose' | 'toe' | 'back' | 'side' {
+  if (cause === 'pitchFwd' || cause === 'nose' || cause === 'knuckle' || cause === 'offpiste') return 'nose';
+  if (cause === 'edge') return 'toe';
+  if (cause === 'backseat' || cause === 'washout') return 'back';
+  return 'side';
+}
+
 async function main() {
   const canvas = document.getElementById('scene') as HTMLCanvasElement;
   const hudRoot = document.getElementById('hud')!;
@@ -90,6 +98,8 @@ async function main() {
       opened: !!air && sp.opened && !sp.grabbing,
       grab: air ? sp.curGrab : null,
       crash: run.phase === 'crash' || (run.phase === 'done' && run.landing?.quality === 'crash'),
+      crashDir: crashDir(run.landing?.cause),
+      absorb: run.landing && run.phase !== 'air' ? Math.min(1, run.landing.efh / 2.5) * Math.max(0, 1 - run.sinceLanding() / 0.3) : 0,
     }, real);
 
     const bv = b.velocity();
@@ -127,7 +137,7 @@ async function main() {
     gfx.follow(pos);
     gfx.quality.sample(real);
     // in the air: live trick text, board compass (board vs travel seen from above), "Apri ora!"
-    let airHud: { text: string; compassDeg: number | null; upsideDown: boolean } | null = null;
+    let airHud: { text: string; compassDeg: number | null; upsideDown: boolean; tiltDeg?: number } | null = null;
     if (air && aq) {
       const fwd = new THREE.Vector3(0, 0, 1).applyQuaternion(rider.root.quaternion), up = new THREE.Vector3(0, 1, 0).applyQuaternion(rider.root.quaternion);
       let rel = (Math.atan2(fwd.x, fwd.z) - Math.atan2(bv.x, bv.z)) / DEG;
@@ -135,7 +145,7 @@ async function main() {
       const live = sp.mode === 'spin' ? `${Math.round(Math.abs(sp.phi))}°` : sp.mode === 'flip' ? `${Math.round(Math.abs(sp.theta))}°` : '';
       const grabTxt = sp.curGrab ? GRAB_NAME[sp.curGrab] : '';
       airHud = assist.indicators
-        ? { text: [live, sp.inv ? `${sp.inv} inv.` : '', grabTxt].filter(Boolean).join(' · '), compassDeg: sp.mode !== 'none' ? rel : null, upsideDown: up.y < 0 }
+        ? { text: [live, sp.inv ? `${sp.inv} inv.` : '', grabTxt].filter(Boolean).join(' · '), compassDeg: sp.mode !== 'none' ? rel : null, upsideDown: up.y < 0, tiltDeg: Math.acos(Math.max(-1, Math.min(1, up.y))) / DEG }
         : { text: grabTxt, compassDeg: null, upsideDown: false };
       if (assist.indicators) {
         if (sp.grabbing && sp.apex) { msg = 'Apri ora!'; big = true; }

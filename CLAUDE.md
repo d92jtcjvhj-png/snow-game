@@ -25,7 +25,7 @@ Gioco di snowboard 3D per browser, PC e telefono. Stack: Vite + TypeScript stric
 5. **Rotazioni e atterraggio (Fase 3).**
    - Il momento angolare si fissa al pop; in aria ω = L / I(posa): grab = raccolto, aperto = lento. Nessun tetto fisso (`src/physics/spin.ts`).
    - Due potenze: spin (carica, L) e spinta fuori asse (levetta, L_f). Il ribaltamento parte dopo il primo mezzo giro e va chiuso a un giro intero prima di atterrare.
-   - Atterraggio = fasce della ricerca 12 (`src/physics/landing.ts`) + fisica dopo il contatto: la tavola tiene il suo yaw, lo `stance` della tavola gestisce lo switch.
+   - Atterraggio = fasce delle ricerche 12 e 13 (`src/physics/landing.ts`: yaw con rotazione residua col segno, pitch asimmetrico, lamina al contatto, impatto, zona) + fisica al contatto (impulso d'attrito, carico delle gambe, riallineamento lento, neve fresca); lo `stance` della tavola gestisce switch e revert.
 6. **Telefono prima.**
    - Qualità adattiva obbligatoria (`src/render/quality.ts`): ogni effetto nuovo deve dichiarare in quale livello è attivo.
    - Target 60 fps su un telefono medio.

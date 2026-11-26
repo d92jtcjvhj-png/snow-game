@@ -109,16 +109,21 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
   - **shifty** senza rotazione: solo la tavola, rotazione netta zero.
 - ✅ **Grab**: Nose, Mute, Indy, Tail (bottoni in aria o Q/W/E/R). Tenuto = raccolto e più veloce; lasciato = aperto, più lento e asse che si raddrizza; all'apice senza grab ti apri da solo. Conta se tenuto ≥ 0,15 s; vince il più lungo.
 - ✅ **Nome del trick**: Frontside / Backside / Cab / Switch Backside + Double/Triple/Quad/Quint + Cork/Misty/Rodeo + gradi a multipli di 180 + grab; Frontflip/Backflip; Straight air, Shifty, Stalled.
-- ✅ **Atterraggio = fisica + fasce** (ricerca 12):
-  - errore della tavola rispetto alla marcia (mod 180°, più la rotazione residua): ≤ 8° perfetto, ≤ 16° pulito, ≤ 28° sporco, ≤ 45° molto sporco, oltre = caduta;
-  - inclinazione del corpo rispetto alla verticale: 8 / 15 / 25 / 40°; capovolto = caduta;
-  - impatto (caduta equivalente): 0,8 / 1,5 / 2,5 / 3,5 m;
-  - zona: sul tavolo = sporco o peggio; sul knuckle = almeno molto sporco; fuori pista con tavola storta = caduta; di punta sbilanciato in avanti = un livello peggio;
-  - vince la fascia peggiore; **tolleranza ×1,7** opzionale;
-  - poi decide la fisica: la tavola tiene l'imbardata con cui atterra, quindi chi atterra storto derapa e frena;
-  - **atterrare al contrario (~180°) è pulito e prosegui in switch** (stance della tavola nella fisica);
-  - **caduta**: il rider si ribalta e scivola, frenato forte.
-- ✅ **Scheda**: nome del trick, esito, nota, consiglio, diagramma della tavola, gradi reali, inversioni, grab, tempo in aria, punto d'atterraggio, impatto, errori; sotto, i dati di stacco.
+- ✅ **Atterraggio realistico** (ricerche 12 e 13): fasce (la peggiore decide, tolleranza ×1,7 su tutte) + fisica dopo il contatto:
+  - **tavola vs marcia** (mod 180°): 8 / 16 / 28 / 45°; la **rotazione residua conta con il segno**: se gira verso l'allineamento aiuta, se gira via peggiora;
+  - **revert**: oltre 45° ma con la rotazione residua che porta a completare il mezzo giro, resti in piedi e prosegui al contrario;
+  - **inclinazione avanti** (severa: 8 / 15 / 25 / 35°, poi caduta di punta) e **indietro** (più tollerante: 10 / 20 / 35 / 50°, prima il **butt check**, poi la caduta sulla schiena); **di lato** 8 / 15 / 25 / 40°; capovolto = caduta;
+  - **lamina al contatto** dal rollio del corpo: lamina a valle piantata mentre la tavola scivola di lato = **edge catch** (caduta); talloni col peso dietro = **washout** (butt check);
+  - **impatto** (caduta equivalente) 0,8 / 1,5 / 2,5 / 3,5 m; con un **grab ancora tenuto** le gambe hanno meno corsa (fasce ×0,6);
+  - **zona**: tavolo = sporco o peggio; knuckle = molto sporco solo con impatto alto o sbilanciato in avanti; **neve fresca fuori pista**: attrito forte che frena, impatto più morbido, la punta si pianta se sei sbilanciato in avanti o storto;
+  - di punta e sbilanciato in avanti = un livello peggio, anche in switch (conta la punta che guida);
+  - **fisica al contatto**: impulso d'attrito che cresce con la tavola storta (chi atterra storto perde velocità), carico delle gambe (~4× il peso per 0,15–0,3 s) che fa derapare di più, riallineamento lento (~140°/s) così la derapata si vede;
+  - **esiti**: Stomp, Pulito, Mano a terra, Due mani, Butt check (perdi velocità), Revert, Caduta;
+  - **caduta per causa**: edge catch = sbalzato sulle punte e frenata forte; in avanti = sulla punta; indietro = sulla schiena, scivola di più; il rider si ribalta nel verso giusto;
+  - **gambe che si comprimono** all'atterraggio, in proporzione all'impatto (animazione, tutti i livelli di qualità);
+  - **atterrare al contrario (~180°) è pulito e prosegui in switch** (stance della tavola nella fisica).
+- ✅ **Bussola in aria**: oltre all'allineamento mostra "Inclinato N°" se il corpo è ancora inclinato.
+- ✅ **Scheda**: nome del trick, esito (Stomp … Caduta), nota per causa, consiglio, diagramma della tavola, gradi reali, inversioni, grab, tempo in aria, punto d'atterraggio, impatto, errore della tavola, inclinazione avanti/indietro e di lato, lamina al contatto; sotto, i dati di stacco.
 - ❌ Punteggi e giudici: più avanti. Underflip e grab "tirati": più avanti.
 - ❌ Switch e cab: la tabella delle lamine li prevede, ma il rider va sempre in avanti.
 - ❌ Ollie / hop sull'approccio: nel legacy c'erano, qui il rilascio prima del kicker annulla la carica.
@@ -156,7 +161,7 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
 - ❌ Suoni: da fare.
 
 ## A9. Test e deploy
-- ✅ 54 test Vitest headless:
+- ✅ 63 test Vitest headless:
   - `snow`: sciancratura, anisotropia, presa limitata, derapata;
   - `board`: rettilineo, curva, traverso, speed check (stop sul 35°, check leggero, tavola a 90°), determinismo;
   - `bigair`: geometria FIS, mesh uguale al collider, velocità e sweet spot, riproducibilità;

@@ -16,8 +16,11 @@ export interface RiderPose {
   opened?: boolean;
   /** grab held in the air */
   grab?: 'nose' | 'mute' | 'indy' | 'tail' | null;
-  /** fallen: the rider tumbles over */
+  /** fallen: the rider tumbles over, in the direction of the cause */
   crash?: boolean;
+  crashDir?: 'nose' | 'toe' | 'back' | 'side';
+  /** 0..1: legs compressing to absorb a landing (∝ impact) */
+  absorb?: number;
 }
 
 /**
@@ -75,7 +78,8 @@ export class Rider {
     const decay = Math.exp(-w * dt), v = this.rollV;
     this.roll.rotation.z = target + (x + (v + w * x) * dt) * decay;
     this.rollV = (v - w * (v + w * x) * dt) * decay;
-    this.cr += (p.crouch - this.cr) * Math.min(1, dt * (p.crouch < this.cr ? 14 : 7));
+    const crouch = Math.max(p.crouch, p.absorb ?? 0);
+    this.cr += (crouch - this.cr) * Math.min(1, dt * (crouch < this.cr ? 14 : 20));
     const c = this.cr;
     this.legF.scale.y = this.legR.scale.y = 1 - 0.36 * c;
     this.legF.position.y = this.legR.position.y = 0.4 * (1 - 0.36 * c);
@@ -95,9 +99,17 @@ export class Rider {
     const k = Math.min(1, dt * 12);
     this.armF.rotation.x += (fx - this.armF.rotation.x) * k; this.armR.rotation.x += (rx - this.armR.rotation.x) * k;
     this.armF.rotation.z += (fz - this.armF.rotation.z) * k; this.armR.rotation.z += (rz - this.armR.rotation.z) * k;
-    // crash: tip over sideways onto the snow
+    // crash: tip over in the direction of the cause (docs/research 13)
+    //  nose = over the nose (pitch forward), toe = thrown face-first over the toe edge (edge catch),
+    //  back = sat down on the heels / back, side = sideways
     this.crashT = p.crash ? Math.min(1.45, this.crashT + dt * 4) : 0;
-    this.roll.rotation.x = p.crash ? 0 : this.roll.rotation.x;
-    if (p.crash) this.roll.rotation.z = this.crashT;
+    if (p.crash) {
+      const a = this.crashT;
+      if (p.crashDir === 'nose') { this.roll.rotation.set(a, 0, 0); }
+      else if (p.crashDir === 'toe') { this.roll.rotation.set(0, 0, -a); }
+      else if (p.crashDir === 'back') { this.roll.rotation.set(0, 0, Math.min(a, 1.1)); }
+      else { this.roll.rotation.set(0, 0, a); }
+      this.rollV = 0;
+    } else this.roll.rotation.x = 0;
   }
 }

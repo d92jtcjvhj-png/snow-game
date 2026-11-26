@@ -1,14 +1,15 @@
 import type RAPIER from '@dimforge/rapier3d-compat';
-import { APPROACH, DEG, POP, SNOW, START_Z, STEP, TAKEOFF_EDGE, type TrickKind } from '../core/config';
+import { APPROACH, DEG, LANDING, POP, SNOW, SOFT_SNOW, START_Z, STEP, TAKEOFF_EDGE, type TrickKind } from '../core/config';
 import { Approach, type ApproachPhase } from '../physics/approach';
 import { Board } from '../physics/board';
-import { evaluateLanding, type LandingCause, type LandingQuality } from '../physics/landing';
+import { evaluateLanding, type LandingCause, type LandingOutcome, type LandingQuality } from '../physics/landing';
 import { airQuat, initSpin, stepSpin, type GrabId, type SpinState } from '../physics/spin';
+import { SPIN } from '../core/config';
 import { qAxis, qMul, qRot, type Q4 } from '../physics/vec';
 import { dragK } from '../physics/snow';
 import { len, v3, type V3 } from '../physics/vec';
 import { TERRAIN_GROUPS, createPhysicsWorld, type Rapier } from '../physics/world';
-import { BA, LM, heightAt, inLanding, onKicker } from './bigair';
+import { BA, LM, heightAt, inLanding, onKicker, softAt } from './bigair';
 import type { TerrainGrid } from './terrain';
 import { trickName } from './trickName';
 
@@ -81,6 +82,11 @@ export interface LandingRecord {
   grabTime: number;
   quality: LandingQuality;
   cause: LandingCause;
+  outcome: LandingOutcome;
+  pitch: number;
+  roll: number;
+  contactEdge: number;
+  grabHeld: boolean;
   yawErr: number;
   tiltErr: number;
   yawSigned: number;
@@ -133,7 +139,7 @@ export class Run {
       R.ColliderDesc.trimesh(grid.positions, grid.indices, R.TriMeshFlags.FIX_INTERNAL_EDGES).setCollisionGroups(TERRAIN_GROUPS),
       ground,
     );
-    this.board = new Board(R, this.world, { heightAt });
+    this.board = new Board(R, this.world, { heightAt, softAt });
     this.reset();
   }
 
@@ -219,8 +225,9 @@ export class Run {
       b.postStep();
       if (this.t - this.landedT > 1.4) this.phase = 'done';
     } else if (this.phase === 'crash') {
-      // the rider tumbles and slides: the snow brakes him hard
-      b.preStep({ kappa: 0, edge: 0, brake: 1, tuck: false }, dt);
+      // the rider tumbles and slides: the snow brakes him (hard after an edge catch, less sliding on the back)
+      const soft = this.landing && (this.landing.cause === 'backseat' || this.landing.cause === 'washout');
+      b.preStep({ kappa: 0, edge: 0, brake: soft ? 0.4 : 1, tuck: false }, dt);
       this.world.step();
       b.postStep();
       if (this.t - this.landedT > 1.8) this.phase = 'done';
@@ -303,12 +310,17 @@ export class Run {
     const tk = this.takeoff!;
     const sp = this.spin ?? initSpin(0, 0, 0, 0, null);
     const q = this.airOrientationAt();
-    const fwd = qRot(q, { x: 0, y: 0, z: 1 }), up = qRot(q, { x: 0, y: 1, z: 0 });
-    const efh = b.impactSpeed ** 2 / (2 * 9.81);
+    const fwd = qRot(q, { x: 0, y: 0, z: 1 }), up = qRot(q, { x: 0, y: 1, z: 0 }), lat = qRot(q, { x: 1, y: 0, z: 0 });
+    const soft = softAt(p.x, p.z);
+    const efh = (b.impactSpeed ** 2 / (2 * 9.81)) * (1 - (1 - SOFT_SNOW.EFH) * soft);
     const dK = p.z - LM.zKnuckle, inL = inLanding(p.x, p.z);
+    const grabHeld = !!sp.curGrab;
+    // residual rotation, signed around the vertical (spin) and the off-axis flip still going
+    const resYaw = sp.mode === 'spin' ? sp.dir * sp.omega : 0;
+    const resFlip = sp.tiltType !== 'flat' && !sp.flipDone ? Math.abs(sp.Lf / (grabHeld ? SPIN.I_TUCK : sp.opened ? SPIN.I_OPEN : SPIN.I_NEUTRAL)) : 0;
     const ev = evaluateLanding({
-      boardFwd: fwd, bodyUp: up, velocity: v, normal: b.normal, efh,
-      residualOmega: sp.mode === 'spin' ? sp.omega : 0, dKnuckle: dK, inLanding: inL, tolerance: this.tolerance,
+      boardFwd: fwd, boardLat: lat, bodyUp: up, velocity: v, normal: b.normal, efh,
+      residualOmega: resYaw, residualFlip: resFlip, dKnuckle: dK, inLanding: inL, grabHeld, tolerance: this.tolerance,
     });
     const info = trickName(sp, b.stance < 0);
     this.landing = {
@@ -322,14 +334,26 @@ export class Run {
       efh,
       trick: info.name, deg: info.deg, realDeg: sp.mode === 'spin' ? Math.abs(sp.phi) : sp.mode === 'flip' ? Math.abs(sp.theta) : 0,
       inv: sp.inv, grab: info.grab, grabTime: info.grabTime,
-      quality: ev.quality, cause: ev.cause, yawErr: ev.yawErr, tiltErr: ev.tiltErr, yawSigned: ev.yawSigned, switchLand: ev.switchLand,
+      quality: ev.quality, cause: ev.cause, outcome: ev.outcome, yawErr: ev.yawErr, tiltErr: ev.tiltErr,
+      pitch: ev.pitch, roll: ev.roll, contactEdge: ev.contactEdge, grabHeld,
+      yawSigned: ev.yawSigned, switchLand: ev.switchLand,
     };
-    // physics takes over: the board keeps the yaw it landed with (an off-line board skids and brakes);
-    // a backwards landing means riding switch from now on
+    // physics takes over (docs/research 13): the board keeps the yaw it landed with; the touchdown
+    // costs speed with the misalignment, the legs load the snow, the board pivots back slowly (skid).
     b.psi = Math.atan2(fwd.x, fwd.z);
+    b.landImpact(Math.abs(Math.sin(ev.yawSigned * DEG)), LANDING.ABSORB_D);
+    b.pivotRate = LANDING.REALIGN_RATE;
     if (ev.switchLand) b.stance = b.stance > 0 ? -1 : 1;
+    if (ev.outcome === 'buttcheck') b.scrub(0.85);
+    if (ev.outcome === 'twohands') b.scrub(0.92);
+    if (ev.quality === 'crash') b.scrub(ev.cause === 'edge' ? 0.45 : ev.cause === 'backseat' || ev.cause === 'washout' ? 0.8 : 0.6);
     this.phase = ev.quality === 'crash' ? 'crash' : 'landed';
     this.landedT = this.t;
+  }
+
+  /** seconds since the touchdown (∞ before it) */
+  sinceLanding(): number {
+    return this.landing ? this.t - this.landedT : Infinity;
   }
 
   /** air orientation even on the touchdown step (phase already switching) */
