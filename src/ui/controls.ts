@@ -24,7 +24,7 @@ export function createControls(root: HTMLElement, input: Input): Controls {
     <div id="bar" hidden><div id="barTicks"></div><div id="barKnob"></div></div>
     <div id="groundPad">
       <div id="brakePad"><div id="brakeFill"></div><span>Speed<br>check</span></div>
-      <div id="stick"><div class="slbl up">Cork · Frontflip</div><div class="slbl dn">Misty/Rodeo · Backflip</div><div id="stickKnob"></div></div>
+      <div id="stick"><div class="slbl up">Cork · Frontflip</div><div class="slbl dn">Misty/Rodeo · Backflip</div><div id="stickFill"></div><div id="stickPct"></div><div id="stickKnob"></div></div>
     </div>
     <div id="grabsPad" hidden>
       <button class="gb" id="gNose" data-g="nose">Nose</button><button class="gb" id="gMute" data-g="mute">Mute</button>

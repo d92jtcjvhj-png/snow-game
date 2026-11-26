@@ -73,10 +73,13 @@ describe('landing, research 13', () => {
     expect(e.quality).toBe('crash');
   });
 
-  it('a big yaw with the spin still carrying on becomes a revert (rider stays up, now switch)', () => {
-    const e = evaluateLanding(base({ boardFwd: fwdAt(60), residualOmega: 300 }));
-    expect(e.outcome).toBe('revert');
-    expect(e.switchLand).toBe(true);
+  it('no landing revert: a board ~90° across is a crash even with the spin still carrying on', () => {
+    for (const w of [300, -300, 0]) {
+      const e = evaluateLanding(base({ boardFwd: fwdAt(90), residualOmega: w }));
+      expect(e.outcome).toBe('crash');
+      expect(e.cause).toBe('yaw');
+    }
+    expect(evaluateLanding(base({ boardFwd: fwdAt(60), residualOmega: 300 })).outcome).toBe('crash');
   });
 
   it('a grab still held makes the impact bands stricter', () => {

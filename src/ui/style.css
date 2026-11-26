@@ -36,6 +36,9 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 #brakeFill{position:absolute;left:0;right:0;top:0;height:0;background:rgba(255,90,54,.85);pointer-events:none}
 #stick{position:relative;width:120px;height:120px;border-radius:50%;background:var(--glass);border:2px solid var(--line);touch-action:none}
 #stick::before{content:"";position:absolute;left:50%;top:14px;bottom:14px;width:2px;margin-left:-1px;background:rgba(255,255,255,.35)}
+#stickPct{position:absolute;left:-30px;right:-30px;bottom:calc(100% + 20px);text-align:center;font:800 30px/1 "Barlow Condensed",sans-serif;color:#ffd24a;text-shadow:0 2px 8px rgba(15,26,43,.6);pointer-events:none}
+#stickPct small{display:block;font-size:13px;color:#fff}
+#stickFill{position:absolute;left:50%;width:8px;margin-left:-4px;border-radius:4px;background:#ffd24a;pointer-events:none;height:0}
 #stickKnob{position:absolute;left:50%;top:50%;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.35);pointer-events:none}
 .slbl{position:absolute;left:-14px;right:-14px;text-align:center;font-size:9px;font-weight:600;text-transform:uppercase;opacity:.85;pointer-events:none}
 .slbl.up{top:-16px}.slbl.dn{bottom:-16px}

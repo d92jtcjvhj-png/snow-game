@@ -1,4 +1,4 @@
-import { APPROACH, DEG, MS_TO_KMH } from '../core/config';
+import { APPROACH, DEG, MS_TO_KMH, POP } from '../core/config';
 import type { LandingRecord, TakeoffRecord } from '../world/run';
 
 export interface Assist {
@@ -40,12 +40,11 @@ const EDGE: Record<string, string> = { heel: 'Tallone (heel)', toe: 'Punta (toe)
 const side = (v: number) => (v > 0 ? 'lato tallone' : 'lato punta');
 const OUTCOME: Record<string, [string, string]> = {
   stomp: ['Stomp', 'q-perfect'], clean: ['Pulito', 'q-clean'], hand: ['Mano a terra', 'q-sketchy'],
-  twohands: ['Due mani', 'q-severe'], buttcheck: ['Butt check', 'q-severe'], revert: ['Revert', 'q-sketchy'], crash: ['Caduta', 'q-crash'],
+  twohands: ['Due mani', 'q-severe'], buttcheck: ['Butt check', 'q-severe'], crash: ['Caduta', 'q-crash'],
 };
 const CAUSE: Record<string, (l: LandingRecord) => string> = {
   ok: (l) => (l.quality === 'perfect' ? 'Nello sweet spot, dritto e livellato.' : 'Atterraggio pulito.'),
   yaw: (l) => (l.quality === 'crash' ? 'Tavola troppo di traverso.' : 'Tavola non in linea: atterri derapando e perdi velocità.'),
-  revert: () => 'Tavola molto storta, ma la rotazione residua ti porta a girare fino in fondo: revert, resti in piedi al contrario.',
   pitchFwd: (l) => (l.quality === 'crash' ? 'Sbilanciato in avanti: caduta di punta.' : 'Sbilanciato in avanti: metti le mani avanti.'),
   backseat: (l) => (l.quality === 'crash' ? 'Troppo indietro: cadi sulla schiena.' : 'Troppo indietro: ti siedi (butt check) e perdi velocità.'),
   roll: () => 'Inclinato di lato: asse non raddrizzato.',
@@ -61,7 +60,7 @@ const CAUSE: Record<string, (l: LandingRecord) => string> = {
 /** a training tip from the main cause (legacy texts, updated with research 13) */
 function tipFor(l: LandingRecord, tk: TakeoffRecord): string {
   if (l.quality === 'perfect' || l.quality === 'clean') return l.grabHeld ? 'Hai tenuto il grab fino a terra: le gambe hanno meno corsa per assorbire.' : '';
-  if ((l.cause === 'yaw' || l.cause === 'revert') && l.realDeg) {
+  if (l.cause === 'yaw' && l.realDeg) {
     const over = l.realDeg - l.deg > 0;
     return over ? 'Hai girato troppo: lascia il grab un po’ prima (o carica meno).' : 'Non hai chiuso la rotazione: tieni il grab un po’ di più, o carica di più.';
   }
@@ -137,6 +136,7 @@ export function createHud(root: HTMLElement, assist: Assist, h: { onStart(): voi
   addEventListener('resize', rotate); rotate();
 
   const spd = $('hSpd'), edgeEl = $('hEdge'), dbg = $('dbg'), msg = $('msg'), lbl = $('chargeLbl');
+  const stickPct = $('stickPct'), stickFill = $('stickFill');
   const trickEl = $('trick'), compass = $('compass'), cBoard = $('cBoard'), cTxt = $('cTxt');
   let frame = 0;
   return {
@@ -146,6 +146,12 @@ export function createHud(root: HTMLElement, assist: Assist, h: { onStart(): voi
       edgeEl.textContent = !s.grounded ? '—' : Math.abs(e) < 4 ? 'piatta' : `${e > 0 ? 'heel' : 'toe'} ${Math.round(Math.abs(e))}°`;
       if (frame++ % 15 === 0) dbg.textContent = `${Math.round(s.fps)} fps · ${s.tier}`;
       msg.textContent = s.msg; msg.classList.toggle('big', s.bigMsg);
+      // second power on the stick itself: the % pushed (the max remembered during the charge) and a fill along the track
+      const axP = s.grounded ? Math.max(0, (Math.abs(s.axis) - POP.AXIS_DEAD) / (1 - POP.AXIS_DEAD)) : 0;
+      const axOn = s.grounded && Math.abs(s.axis) >= POP.AXIS_DEAD;
+      stickPct.innerHTML = axOn ? `${Math.round(axP * 100)}%<small>fuori asse</small>` : '';
+      stickFill.style.height = axOn ? `${Math.round(axP * 46)}px` : '0';
+      stickFill.style.top = s.axis > 0 ? `${58 - Math.round(axP * 46)}px` : '58px';
       if (s.charging && s.grounded) {
         const p = Math.round(Math.abs(s.charge) * 100);
         const ax = Math.abs(s.axis) >= 0.2 ? (s.axis > 0 ? 'Cork' : s.charge > 0 ? 'Misty' : 'Rodeo') : '';

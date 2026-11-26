@@ -98,7 +98,7 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
   - la rotazione parte in 0,28 s (spalle prima, tavola dopo);
   - **due potenze** (come in una modalità classificata, conta il giocatore):
     - **carica** (pollice sinistro) = spinta di spin, cioè quanti gradi;
-    - **spinta fuori asse** (levetta a destra, in %, con tacche e vibrazione ogni 25%) = quanto velocemente ti ribalti: poca = un ribaltamento lento (es. Cork 1260/1800), media = double, tanta = triple (quad con grab lungo);
+    - **spinta fuori asse** (levetta a destra, in %, con tacche e vibrazione ogni 25%; la **percentuale grande sopra la levetta** e una barra gialla lungo la guida mostrano la spinta, anche con la tastiera) = quanto velocemente ti ribalti: poca = un ribaltamento lento (es. Cork 1260/1800), media = double, tanta = triple (quad con grab lungo);
     - su = cork, giù = misty (FS) o rodeo (BS); senza carica su/giù = frontflip/backflip (la levetta ne dà la velocità);
     - la levetta vale per **tutta la carica** e ricorda la spinta più forte raggiunta (lasciarla non la azzera); con la tastiera ↑/↓ tenuti la fanno salire come la carica;
   - **ribaltamento a rampa**: parte dopo il primo mezzo giro di spin; ω_f = L_f / I(posa), quindi anche il ribaltamento accelera col grab e rallenta aprendosi;
@@ -111,14 +111,14 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
 - ✅ **Nome del trick**: Frontside / Backside / Cab / Switch Backside + Double/Triple/Quad/Quint + Cork/Misty/Rodeo + gradi a multipli di 180 + grab; Frontflip/Backflip; Straight air, Shifty, Stalled.
 - ✅ **Atterraggio realistico** (ricerche 12 e 13): fasce (la peggiore decide, tolleranza ×1,7 su tutte) + fisica dopo il contatto:
   - **tavola vs marcia** (mod 180°): 8 / 16 / 28 / 45°; la **rotazione residua conta con il segno**: se gira verso l'allineamento aiuta, se gira via peggiora;
-  - **revert**: oltre 45° ma con la rotazione residua che porta a completare il mezzo giro, resti in piedi e prosegui al contrario;
+  - **niente revert d'atterraggio**: oltre 45° di traverso è sempre caduta, qualunque sia la rotazione residua (tolto dopo le prove della PR #10);
   - **inclinazione avanti** (severa: 8 / 15 / 25 / 35°, poi caduta di punta) e **indietro** (più tollerante: 10 / 20 / 35 / 50°, prima il **butt check**, poi la caduta sulla schiena); **di lato** 8 / 15 / 25 / 40°; capovolto = caduta;
   - **lamina al contatto** dal rollio del corpo: lamina a valle piantata mentre la tavola scivola di lato = **edge catch** (caduta); talloni col peso dietro = **washout** (butt check);
   - **impatto** (caduta equivalente) 0,8 / 1,5 / 2,5 / 3,5 m; con un **grab ancora tenuto** le gambe hanno meno corsa (fasce ×0,6);
   - **zona**: tavolo = sporco o peggio; knuckle = molto sporco solo con impatto alto o sbilanciato in avanti; **neve fresca fuori pista**: attrito forte che frena, impatto più morbido, la punta si pianta se sei sbilanciato in avanti o storto;
   - di punta e sbilanciato in avanti = un livello peggio, anche in switch (conta la punta che guida);
   - **fisica al contatto**: impulso d'attrito che cresce con la tavola storta (chi atterra storto perde velocità), carico delle gambe (~4× il peso per 0,15–0,3 s) che fa derapare di più, riallineamento lento (~140°/s) così la derapata si vede;
-  - **esiti**: Stomp, Pulito, Mano a terra, Due mani, Butt check (perdi velocità), Revert, Caduta;
+  - **esiti**: Stomp, Pulito, Mano a terra, Due mani, Butt check (perdi velocità), Caduta;
   - **caduta per causa**: edge catch = sbalzato sulle punte e frenata forte; in avanti = sulla punta; indietro = sulla schiena, scivola di più; il rider si ribalta nel verso giusto;
   - **gambe che si comprimono** all'atterraggio, in proporzione all'impatto (animazione, tutti i livelli di qualità);
   - **atterrare al contrario (~180°) è pulito e prosegui in switch** (stance della tavola nella fisica).
