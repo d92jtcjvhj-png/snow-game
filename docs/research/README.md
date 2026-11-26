@@ -25,6 +25,8 @@ Ogni affermazione ha la sua fonte. Molte pagine erano bloccate dalla rete della 
 | `12-note-*.md` | Note di base del report 12 (spin in asse, fuori asse, record e giudizio, esiti d'atterraggio) |
 | `13-atterraggio-realistico.md` | **Report**: atterraggio reale (contatto di coda, gambe ~4× il peso, edge catch vs washout vs derapata, rotazione residua, esiti da stomp a slam) confrontato col modello del gioco, con modifiche proposte per priorità |
 | `13a-note-biomeccanica-atterraggio.md`, `13b-note-catalogo-esiti.md` | Note di base del report 13 |
+| `14-animazioni-rider.md` | **Report**: come si muove il corpo di un rider di big air (andatura, curve, speed check, carica e pop, raccolto e grab, apertura e spotting, assorbimento, mano a terra, butt check, cadute per tipo), proporzioni e limiti articolari, molle critiche e IK a due ossa; tabella di pose chiave per il codice. Quasi tutti gli angoli sono STIMA: la rete della sessione bloccava i testi completi |
+| `14a`–`14e-note-*.md` | Note di base del report 14 (andatura, stacco, aria e grab, atterraggio e cadute, proporzioni e limiti) |
 
 **Scelta di design (utente) sul report 08.** Per il ritardo il report proponeva di tenere la S compressa. Si è scelto invece il modello "il labbro taglia la S": la linea ha lunghezza fissa dall'inizio della carica, e punto, angolo e lamina allo stacco dipendono solo da quando inizi a caricare e da quanto carichi. Nessun aggiustamento automatico.
 
