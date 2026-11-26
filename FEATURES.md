@@ -96,9 +96,14 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
   - momento angolare fissato al pop dalla carica (potenza e verso), dal pop e dall'aiuto della curva (fino a +10%); in aria ω = L / I(posa);
   - inerzia: raccolto (grab) 2,0, neutro 2,5, aperto 3,5 kg·m² → raccolto ≈ 950°/s a piena carica; nessun tetto fisso (su questo salto ~1800 è il massimo pulito);
   - la rotazione parte in 0,28 s (spalle prima, tavola dopo);
-  - **fuori asse con la levetta**: su = cork, giù = misty (FS) o rodeo (BS); senza carica su/giù = frontflip/backflip. La levetta vale per **tutta la carica**: basta spostarla mentre carichi, anche se la lasci prima di staccare il pollice;
+  - **due potenze** (come in una modalità classificata, conta il giocatore):
+    - **carica** (pollice sinistro) = spinta di spin, cioè quanti gradi;
+    - **spinta fuori asse** (levetta a destra, in %, con tacche e vibrazione ogni 25%) = quanto velocemente ti ribalti: poca = un ribaltamento lento (es. Cork 1260/1800), media = double, tanta = triple (quad con grab lungo);
+    - su = cork, giù = misty (FS) o rodeo (BS); senza carica su/giù = frontflip/backflip (la levetta ne dà la velocità);
+    - la levetta vale per **tutta la carica** e ricorda la spinta più forte raggiunta (lasciarla non la azzera); con la tastiera ↑/↓ tenuti la fanno salire come la carica;
+  - **ribaltamento a rampa**: parte dopo il primo mezzo giro di spin; ω_f = L_f / I(posa), quindi anche il ribaltamento accelera col grab e rallenta aprendosi;
+  - **chiudere il ribaltamento**: aperto e a meno di 25° da un ribaltamento intero, il rider "cerca l'atterraggio" e lo chiude; se apri troppo presto non arrivi al giro intero e atterri inclinato o capovolto, se tieni il grab troppo a lungo ne fai uno di troppo;
   - nel nome i ribaltamenti sono al massimo giri − 1, come nei trick dei pro (es. Quint Cork 2160);
-  - **asse a rampa**: piatto il primo mezzo giro, poi inclinato (35–70°, misty/rodeo più ripidi); aprirsi lo raddrizza a 130°/s. Ne esce inversioni = giri − 1 (double cork 1080, triple 1440…);
   - inversioni contate quando la testa va sotto i piedi;
   - **controrotazione** (pollice in aria dal lato opposto): frena e "parcheggia" fino a 180° nel busto, poi li restituisce ("Stalled" se tenuta a lungo); dallo stesso lato spinge +15%;
   - **shifty** senza rotazione: solo la tavola, rotazione netta zero.

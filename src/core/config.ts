@@ -145,14 +145,20 @@ export const SPIN = {
   FLIP_MAX: 320,
   /** the spin builds up over the first moments (shoulders lead, board follows), legacy */
   RAMP_IN: 0.28,
-  /** cork tilt target from the stick: 35° + 35°·stick; misty/rodeo steeper */
-  TILT_MIN: 35,
-  TILT_GAIN: 35,
-  TILT_FLIPPY: 15,
-  /** the axis ramps in between these yaw angles (°): flat first half-turn → inversions = turns − 1 */
+  /**
+   * Off-axis push (second power, the stick): flip rate around the lateral axis at 100 % in the neutral
+   * pose (°/s), on top of the spin. Little push = slow flipping (e.g. cork 1800 with one inversion),
+   * a lot = faster flipping (double, triple…). Same idea as the spin charge.
+   */
+  OFF_MAX: 650,
+  /** the weakest push still flips once over a whole flight: L_f ∝ OFF_MIN + (1 − OFF_MIN)·push */
+  OFF_MIN: 0.35,
+  /** the off-axis flip ramps in between these spin angles (°): flat first half-turn (inversions ≈ turns − 1) */
   TILT_FROM: 90,
   TILT_TO: 270,
-  /** opening up levels the axis (°/s), legacy LEVEL_RATE */
+  /** spotting: once opened, if the flip is within this many degrees of a whole flip the rider closes it */
+  SPOT_WINDOW: 25,
+  /** ...at this rate at least (°/s), legacy LEVEL_RATE */
   LEVEL_RATE: 130,
   /** counter-rotation (legacy): torso brake (°/s), parked degrees and their release */
   BRAKE_RATE: 260,

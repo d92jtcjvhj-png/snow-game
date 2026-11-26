@@ -121,8 +121,8 @@ export class Run {
   private takeoffPitch = 0;
   /** training: landing tolerance ×1.7 */
   tolerance = false;
-  /** off-axis stick value held during the charge */
-  private axisLatched = 0;
+  /** off-axis push (second power) remembered during the charge, −1..1 */
+  axisLatched = 0;
   /** the set-up line was interrupted by a speed check */
   lineBroken = false;
 
@@ -151,6 +151,7 @@ export class Run {
     this.note = '';
     this.lineBroken = false;
     this.spin = null;
+    this.axisLatched = 0;
   }
 
   /** Advance one fixed step. */
@@ -167,7 +168,10 @@ export class Run {
       if (pressed && beforeLip && !this.pending) { this.chargeOn = true; this.note = ''; this.lineBroken = false; this.axisLatched = 0; }
       // the off-axis stick is remembered for the whole charge (it used to be read only at the instant of
       // the release: a stick let go a moment earlier turned corks into flat spins and flips into straight airs)
-      if (this.chargeOn && Math.abs(inp.axis) >= POP.AXIS_DEAD) this.axisLatched = inp.axis;
+      // second power: keep the strongest push reached (letting the stick go back does not reset it);
+      // pushing the other way switches family with its own push
+      if (this.chargeOn && Math.abs(inp.axis) >= POP.AXIS_DEAD &&
+        (Math.sign(inp.axis) !== Math.sign(this.axisLatched) || Math.abs(inp.axis) > Math.abs(this.axisLatched))) this.axisLatched = inp.axis;
       if (this.chargeOn && held) {
         this.power = Math.abs(inp.charge) >= POP.DEAD ? Math.round(Math.abs(inp.charge) / POP.STEP) * POP.STEP : 0;
         // the set-up carve starts as soon as the charge has a side

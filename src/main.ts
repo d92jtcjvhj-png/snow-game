@@ -143,7 +143,7 @@ async function main() {
       }
     }
     run.tolerance = assist.tolerance;
-    hud.update({ speed: b.speed(), edge: b.edge, grounded: b.grounded && run.phase !== 'air', charging, charge: inp.charge, axis: inp.axis, msg, bigMsg: big, fps: 1000 / gfx.quality.frameMs, tier: gfx.quality.tier, air: airHud });
+    hud.update({ speed: b.speed(), edge: b.edge, grounded: b.grounded && run.phase !== 'air', charging, charge: inp.charge, axis: run.axisLatched || inp.axis, msg, bigMsg: big, fps: 1000 / gfx.quality.frameMs, tier: gfx.quality.tier, air: airHud });
     gfx.renderer.render(gfx.scene, cam.camera);
   });
 

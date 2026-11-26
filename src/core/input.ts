@@ -21,6 +21,7 @@ export class Input {
   private readonly keys = new Set<string>();
   private kbCharge = 0;
   private kbBrake = 0;
+  private kbAxis = 0;
   /** true while the keyboard is in use (for the on-screen charge bar) */
   keyboardCharging = false;
   onKey: ((code: string) => void) | null = null;
@@ -49,7 +50,12 @@ export class Input {
     const b = k.has('KeyB') || k.has('ArrowDown') && k.has('ShiftLeft');
     // pressed = light check (edge 25°), held = sits harder on the heels up to 65°
     this.kbBrake = b ? Math.min(1, Math.max(0.05, this.kbBrake + dt / BOARD.CHECK_RAMP)) : 0;
-    const kbAxis = (k.has('ArrowUp') ? 1 : 0) - (k.has('ArrowDown') ? 1 : 0);
+    // ↑/↓ held: the off-axis push grows like the charge (second power)
+    const kd = (k.has('ArrowUp') ? 1 : 0) - (k.has('ArrowDown') ? 1 : 0);
+    if (kd === 0) this.kbAxis = 0;
+    else if (Math.sign(this.kbAxis) !== kd) this.kbAxis = kd * POP.AXIS_DEAD;
+    else this.kbAxis = kd * Math.min(1, Math.abs(this.kbAxis) + dt * POP.KEY_RATE);
+    const kbAxis = this.kbAxis;
     const t = this.touch;
     const kbGrab: GrabId | null = k.has('KeyQ') ? 'nose' : k.has('KeyW') ? 'mute' : k.has('KeyE') ? 'indy' : k.has('KeyR') ? 'tail' : null;
     return {

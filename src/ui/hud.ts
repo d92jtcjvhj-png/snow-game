@@ -140,9 +140,11 @@ export function createHud(root: HTMLElement, assist: Assist, h: { onStart(): voi
       if (s.charging && s.grounded) {
         const p = Math.round(Math.abs(s.charge) * 100);
         const ax = Math.abs(s.axis) >= 0.2 ? (s.axis > 0 ? 'Cork' : s.charge > 0 ? 'Misty' : 'Rodeo') : '';
+        // second power: off-axis push in % (stick distance beyond the dead zone)
+        const ap = Math.round(Math.max(0, (Math.abs(s.axis) - 0.2) / 0.8) * 100);
         lbl.innerHTML = p >= 10
-          ? `${s.charge > 0 ? 'Frontside' : 'Backside'} ${p}%<small>${s.charge > 0 ? 'stacco di tallone' : 'stacco di punta'}${ax ? ' · ' + ax : ''}</small>`
-          : `${Math.abs(s.axis) >= 0.2 ? (s.axis > 0 ? 'Frontflip' : 'Backflip') : 'Straight air'}<small>base piatta</small>`;
+          ? `${s.charge > 0 ? 'Frontside' : 'Backside'} ${p}%${ax ? `<small>${ax} ${ap}% · ${s.charge > 0 ? 'stacco di tallone' : 'stacco di punta'}</small>` : `<small>${s.charge > 0 ? 'stacco di tallone' : 'stacco di punta'}</small>`}`
+          : `${Math.abs(s.axis) >= 0.2 ? `${s.axis > 0 ? 'Frontflip' : 'Backflip'} ${ap}%` : 'Straight air'}<small>base piatta</small>`;
       } else lbl.textContent = '';
       trickEl.textContent = s.air ? s.air.text : '';
       if (s.air && s.air.compassDeg !== null) {
