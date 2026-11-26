@@ -96,7 +96,8 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
   - momento angolare fissato al pop dalla carica (potenza e verso), dal pop e dall'aiuto della curva (fino a +10%); in aria ω = L / I(posa);
   - inerzia: raccolto (grab) 2,0, neutro 2,5, aperto 3,5 kg·m² → raccolto ≈ 950°/s a piena carica; nessun tetto fisso (su questo salto ~1800 è il massimo pulito);
   - la rotazione parte in 0,28 s (spalle prima, tavola dopo);
-  - **fuori asse con la levetta**: su = cork, giù = misty (FS) o rodeo (BS); senza carica su/giù = frontflip/backflip;
+  - **fuori asse con la levetta**: su = cork, giù = misty (FS) o rodeo (BS); senza carica su/giù = frontflip/backflip. La levetta vale per **tutta la carica**: basta spostarla mentre carichi, anche se la lasci prima di staccare il pollice;
+  - nel nome i ribaltamenti sono al massimo giri − 1, come nei trick dei pro (es. Quint Cork 2160);
   - **asse a rampa**: piatto il primo mezzo giro, poi inclinato (35–70°, misty/rodeo più ripidi); aprirsi lo raddrizza a 130°/s. Ne esce inversioni = giri − 1 (double cork 1080, triple 1440…);
   - inversioni contate quando la testa va sotto i piedi;
   - **controrotazione** (pollice in aria dal lato opposto): frena e "parcheggia" fino a 180° nel busto, poi li restituisce ("Stalled" se tenuta a lungo); dallo stesso lato spinge +15%;
