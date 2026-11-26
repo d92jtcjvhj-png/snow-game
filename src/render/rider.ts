@@ -1,6 +1,7 @@
 import * as THREE from 'three';
-import { flat } from './materials';
 import type { GrabId } from '../physics/spin';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { boardGeometry, createBody, RIDER_COLORS, RIG, soft, type BoneName } from './riderMesh';
 
 /** Landing outcome shown by the body for a moment after touchdown (docs/research 13, 14). */
 export type RiderOutcome = 'hand' | 'twohands' | 'buttcheck' | null;
@@ -37,14 +38,8 @@ export interface RiderPose {
  * Rig (docs/research 14, Tab. 3): H = 1.76 m, Drillis & Contini fractions. Board frame: x = heel side,
  * y = up, z = nose. Regular stance, the rider faces −x (toe side), front foot towards +z.
  */
-const BOARD_TOP = 0.05;
-const ANKLE_Y = BOARD_TOP + 0.09;
-const FOOT_Z = 0.27; // stance ≈ 0.31·H
-const HIP_Z = 0.09; // hip joint centres ≈ 0.10·H apart
-const THIGH = 0.43, SHANK = 0.43;
-const SPINE = 0.46; // pelvis centre → base of the neck
-const SHOULDER_Y = 0.42, SHOULDER_Z = 0.18;
-const UPPER_ARM = 0.31, FOREARM = 0.25;
+// stance ≈ 0.31·H, hip joint centres ≈ 0.10·H apart (the numbers live in riderMesh.RIG, shared with the skin)
+const { BOARD_TOP, ANKLE_Y, FOOT_Z, HIP_Z, THIGH, SHANK, SPINE, SHOULDER_Y, SHOULDER_Z, UPPER_ARM, FOREARM } = RIG;
 const DUCK = 15 * (Math.PI / 180); // +15 / −15 bindings
 
 /** Parameters of a key pose (degrees and metres, chest frame for the hands: origin at the pelvis). */
@@ -132,23 +127,9 @@ const CH = {
 } as const;
 type Ch = keyof typeof CH;
 
-/** A limb segment: a group at the proximal joint, the mesh hanging along −y. */
-class Bone {
-  readonly g = new THREE.Group();
-  readonly mesh: THREE.Mesh;
-  constructor(parent: THREE.Object3D, readonly len: number, rTop: number, rBot: number, mat: THREE.Material) {
-    const geo = new THREE.CylinderGeometry(rTop, rBot, len, 6, 1);
-    geo.translate(0, -len / 2, 0);
-    this.mesh = new THREE.Mesh(geo, mat);
-    this.mesh.castShadow = true;
-    this.g.add(this.mesh);
-    parent.add(this.g);
-  }
-}
-
 const _y = new THREE.Vector3(), _x = new THREE.Vector3(), _z = new THREE.Vector3(), _m = new THREE.Matrix4();
-/** place a bone from `a` to `b` (board frame), its front facing `pole` */
-function setBone(bone: Bone, a: THREE.Vector3, b: THREE.Vector3, pole: THREE.Vector3): void {
+/** place a bone from `a` to `b` (board frame), its front facing `pole`; stretched along y if longer than `len0` */
+function setBone(bone: THREE.Object3D, a: THREE.Vector3, b: THREE.Vector3, pole: THREE.Vector3, len0: number): void {
   _y.subVectors(a, b);
   const len = _y.length();
   _y.divideScalar(len || 1);
@@ -157,9 +138,9 @@ function setBone(bone: Bone, a: THREE.Vector3, b: THREE.Vector3, pole: THREE.Vec
   _x.normalize();
   _z.crossVectors(_x, _y);
   _m.makeBasis(_x, _y, _z);
-  bone.g.quaternion.setFromRotationMatrix(_m);
-  bone.g.position.copy(a);
-  bone.mesh.scale.y = len / bone.len;
+  bone.quaternion.setFromRotationMatrix(_m);
+  bone.position.copy(a);
+  bone.scale.set(1, len / len0, 1);
 }
 
 const _d = new THREE.Vector3(), _n = new THREE.Vector3();
@@ -185,11 +166,11 @@ function ik(a: THREE.Vector3, t: THREE.Vector3, l1: number, l2: number, pole: TH
 }
 
 /**
- * Low-poly articulated rider (docs/research 14): pelvis, spine, head with helmet and goggles, thighs,
- * shanks, upper arms, forearms, mittens and boots on a yellow/purple board. Key poses from the research
- * blended by the physics (edge, speed check, charge, tuck/open springs, impact, landing outcome, crash)
- * and smoothed with critically damped springs; feet locked to the bindings and hands placed by IK.
- * Pure CPU math on ~20 meshes: active at every quality tier.
+ * Soft rider (docs/research 14, 16): one skinned body (pants and jacket, riderMesh.ts) driven by the
+ * same bones the IK places, plus rigid helmet, goggles, mittens, boots and a board with the real
+ * sidecut. Key poses from the research blended by the physics (edge, speed check, charge, tuck/open
+ * springs, impact, landing outcome, crash) and smoothed with critically damped springs; feet locked to
+ * the bindings and hands placed by IK. ~15 draw calls, ~3k triangles: active at every quality tier.
  */
 export class Rider {
   readonly root = new THREE.Group();
@@ -198,12 +179,8 @@ export class Rider {
   private readonly pelvis = new THREE.Group();
   private readonly chest = new THREE.Group();
   private readonly head = new THREE.Group();
-  private readonly thigh: [Bone, Bone];
-  private readonly shank: [Bone, Bone];
-  private readonly upper: [Bone, Bone];
-  private readonly fore: [Bone, Bone];
+  private readonly bones: Record<BoneName, THREE.Bone>;
   private readonly hand: [THREE.Mesh, THREE.Mesh];
-  private readonly knee: [THREE.Mesh, THREE.Mesh];
   private readonly s: Record<Ch, [number, number]>;
   private rollV = 0;
   private crashT = 0;
@@ -219,47 +196,36 @@ export class Rider {
   constructor() {
     this.root.add(this.roll);
     this.roll.add(this.inner);
-    const NOSE = flat(0xffd21f), TAIL = flat(0x8a3cff), PANTS = flat(0x27394d), JACKET = flat(0x2c7be5);
-    const DARK = flat(0x15243a), MITT = flat(0x1d2b3a), WHITE = flat(0xffffff), HELMET = flat(0xff4d4d), GOG = flat(0xffb000);
-    const box = (w: number, h: number, d: number, m: THREE.Material, parent: THREE.Object3D) => {
-      const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.castShadow = true; parent.add(o); return o;
-    };
-    // board: yellow nose half, purple tail half, kicked tips (1.56 m)
-    box(0.28, 0.05, 0.62, NOSE, this.inner).position.set(0, 0.025, 0.31);
-    box(0.28, 0.05, 0.62, TAIL, this.inner).position.set(0, 0.025, -0.31);
-    const n = box(0.28, 0.05, 0.18, NOSE, this.inner); n.position.set(0, 0.06, 0.69); n.rotation.x = -0.4;
-    const t = box(0.28, 0.05, 0.18, TAIL, this.inner); t.position.set(0, 0.06, -0.69); t.rotation.x = 0.4;
-    // boots and highbacks, duck +15 / −15
+    // the skin binds now, while everything is still at identity
+    const body = createBody(this.inner);
+    this.bones = body.bones;
+    const C = RIDER_COLORS;
+    // board from the real sidecut, smooth
+    const board = new THREE.Mesh(boardGeometry(), new THREE.MeshLambertMaterial({ vertexColors: true }));
+    board.castShadow = true;
+    this.inner.add(board);
+    // bindings and boots (rounded), duck +15 / −15; plates bring the boots to BOARD_TOP
     for (const [z, a] of [[FOOT_Z, DUCK], [-FOOT_Z, -DUCK]] as const) {
       const b = new THREE.Group(); b.position.set(0, BOARD_TOP, z); b.rotation.y = a; this.inner.add(b);
-      box(0.3, 0.12, 0.13, DARK, b).position.set(-0.02, 0.06, 0);
-      box(0.04, 0.2, 0.15, MITT, b).position.set(0.14, 0.12, 0);
+      const part = (g: THREE.BufferGeometry, m: THREE.Material, x: number, y: number) => { const o = new THREE.Mesh(g, m); o.position.set(x, y, 0); o.castShadow = true; b.add(o); return o; };
+      part(new RoundedBoxGeometry(0.3, 0.035, 0.2, 2, 0.012), soft(C.strap), 0, -0.012);
+      part(new RoundedBoxGeometry(0.31, 0.15, 0.14, 3, 0.05), soft(C.boot), -0.02, 0.07);
+      part(new RoundedBoxGeometry(0.05, 0.24, 0.16, 2, 0.02), soft(C.strap), 0.15, 0.12).rotation.z = -0.15;
     }
-    // legs: baggy pants, a ball at the knee hides the joint
-    const leg = (): Bone => new Bone(this.inner, THIGH, 0.1, 0.085, PANTS);
-    const shin = (): Bone => new Bone(this.inner, SHANK, 0.085, 0.075, PANTS);
-    this.thigh = [leg(), leg()];
-    this.shank = [shin(), shin()];
-    const kneeBall = () => { const k = new THREE.Mesh(new THREE.IcosahedronGeometry(0.085, 0), PANTS); k.castShadow = true; this.inner.add(k); return k; };
-    this.knee = [kneeBall(), kneeBall()];
-    // pelvis and trunk (jacket, white chest on the toe side, dark back), head with helmet and goggles
+    // head: helmet, goggles band with a strap, a neck gaiter (rigid, it follows the chest)
     this.inner.add(this.pelvis);
-    box(0.24, 0.2, 0.36, PANTS, this.pelvis).position.y = 0.02;
     this.pelvis.add(this.chest);
-    const jacket = box(0.3, 0.5, 0.44, JACKET, this.chest); jacket.position.y = 0.24;
-    box(0.03, 0.36, 0.3, WHITE, this.chest).position.set(-0.155, 0.26, 0);
-    box(0.03, 0.4, 0.34, DARK, this.chest).position.set(0.155, 0.26, 0);
-    box(0.2, 0.08, 0.22, JACKET, this.chest).position.set(0, 0.5, 0); // collar
     this.head.position.y = SPINE + 0.1;
     this.chest.add(this.head);
-    const helmet = new THREE.Mesh(new THREE.IcosahedronGeometry(0.13, 1), HELMET); helmet.castShadow = true; helmet.position.y = 0.06; this.head.add(helmet);
-    box(0.07, 0.08, 0.2, GOG, this.head).position.set(-0.11, 0.06, 0);
-    // arms
-    const arm = (): Bone => new Bone(this.inner, UPPER_ARM, 0.06, 0.055, JACKET);
-    const fore = (): Bone => new Bone(this.inner, FOREARM, 0.055, 0.05, JACKET);
-    this.upper = [arm(), arm()];
-    this.fore = [fore(), fore()];
-    const mitt = () => { const m = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.11, 0.1), MITT); m.castShadow = true; this.inner.add(m); return m; };
+    const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.155, 18, 12, 0, Math.PI * 2, 0, Math.PI * 0.52), soft(C.helmet));
+    helmet.position.y = 0.05; helmet.scale.set(1.05, 1, 0.95); helmet.castShadow = true; this.head.add(helmet);
+    const face = new THREE.Mesh(new THREE.SphereGeometry(0.125, 16, 10), soft(C.strap)); face.position.y = 0.0; this.head.add(face);
+    const strap = new THREE.Mesh(new THREE.TorusGeometry(0.132, 0.014, 6, 24), soft(C.strap)); strap.position.y = 0.035; strap.rotation.x = Math.PI / 2; this.head.add(strap);
+    // goggle lens: a curved band in front of the face (the rider faces −x)
+    const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.142, 0.142, 0.07, 16, 1, true, Math.PI * 1.2, Math.PI * 0.6), soft(C.goggles));
+    lens.position.y = 0.035; lens.material.side = THREE.DoubleSide; this.head.add(lens);
+    // mittens
+    const mitt = () => { const m = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 8), soft(C.mitt)); m.scale.set(0.9, 1.25, 1); m.castShadow = true; this.inner.add(m); return m; };
     this.hand = [mitt(), mitt()];
     this.s = Object.fromEntries((Object.keys(CH) as Ch[]).map((k) => [k, [0, 0]])) as Record<Ch, [number, number]>;
     this.snap(G1, 0);
@@ -345,6 +311,11 @@ export class Rider {
     this.chest.updateMatrix();
     // world (board-frame) matrix of the chest
     const mChest = _m2.multiplyMatrices(this.pelvis.matrix, this.chest.matrix);
+    // the skin's trunk bones follow the pelvis and the (twisted) chest
+    this.bones.pelvis.position.copy(this.pelvis.position);
+    this.bones.pelvis.quaternion.copy(this.pelvis.quaternion);
+    mChest.decompose(this.bones.chest.position, this.bones.chest.quaternion, this.v7);
+    this.bones.chest.scale.set(1, 1, 1);
 
     // legs: feet locked to the bindings, knees towards the toes along each foot (duck)
     for (let i = 0; i < 2; i++) {
@@ -354,9 +325,8 @@ export class Rider {
       const pole = this.v4.set(-Math.cos(DUCK), 0.15, side * Math.sin(DUCK));
       const kj = this.v5;
       ik(hip, ankle, THIGH, SHANK, pole, kj, 1.05);
-      setBone(this.thigh[i]!, hip, kj, pole);
-      setBone(this.shank[i]!, kj, ankle, pole);
-      this.knee[i]!.position.copy(kj);
+      setBone(this.bones[i === 0 ? 'thigh0' : 'thigh1'], hip, kj, pole, THIGH);
+      setBone(this.bones[i === 0 ? 'shin0' : 'shin1'], kj, ankle, pole, SHANK);
     }
 
     // arms: wrists to their targets (chest frame → board frame), or to the board while grabbing
@@ -377,11 +347,12 @@ export class Rider {
       const pole = this.v4.set(0.8, -0.35, side * 0.55).transformDirection(mChest);
       const el = this.v5;
       ik(sh, wrist, UPPER_ARM, FOREARM, pole, el, 1.25);
-      setBone(this.upper[i]!, sh, el, pole);
-      setBone(this.fore[i]!, el, wrist, pole);
+      const fore = this.bones[i === 0 ? 'fore0' : 'fore1'];
+      setBone(this.bones[i === 0 ? 'upper0' : 'upper1'], sh, el, pole, UPPER_ARM);
+      setBone(fore, el, wrist, pole, FOREARM);
       const h = this.hand[i]!;
-      h.position.copy(wrist).addScaledVector(this.v7.subVectors(wrist, el).normalize(), 0.05);
-      h.quaternion.copy(this.fore[i]!.g.quaternion);
+      h.position.copy(wrist).addScaledVector(this.v7.subVectors(wrist, el).normalize(), 0.045);
+      h.quaternion.copy(fore.quaternion);
     }
 
     // crash: tip over in the direction of the cause (docs/research 13, 14)
