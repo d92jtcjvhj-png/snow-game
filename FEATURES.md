@@ -101,13 +101,14 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
     - **spinta fuori asse** (levetta a destra, in %, con tacche e vibrazione ogni 25%; la **percentuale grande sopra la levetta** e una barra gialla lungo la guida mostrano la spinta, anche con la tastiera) = quanto velocemente ti ribalti: poca = un ribaltamento lento (es. Cork 1260/1800), media = double, tanta = triple (quad con grab lungo);
     - su = cork, giù = misty (FS) o rodeo (BS); senza carica su/giù = frontflip/backflip (la levetta ne dà la velocità);
     - la levetta vale per **tutta la carica** e ricorda la spinta più forte raggiunta (lasciarla non la azzera); con la tastiera ↑/↓ tenuti la fanno salire come la carica;
-  - **ribaltamento a rampa**: parte dopo il primo mezzo giro di spin; ω_f = L_f / I(posa), quindi anche il ribaltamento accelera col grab e rallenta aprendosi;
+  - **un'unica rotazione fluida**: il ribaltamento parte al pop insieme allo spin, con la stessa rampa (l'asse inclinato si fissa allo stacco, ricerca 12); ω_f = L_f / I(posa), quindi anche il ribaltamento accelera col grab e rallenta aprendosi; spinta ritarata (650 → 520 °/s) per tenere gli stessi ribaltamenti di prima;
   - **chiudere il ribaltamento**: aperto e a meno di 25° da un ribaltamento intero, il rider "cerca l'atterraggio" e lo chiude; se apri troppo presto non arrivi al giro intero e atterri inclinato o capovolto, se tieni il grab troppo a lungo ne fai uno di troppo;
   - nel nome i ribaltamenti sono al massimo giri − 1, come nei trick dei pro (es. Quint Cork 2160);
   - inversioni contate quando la testa va sotto i piedi;
   - **controrotazione** (pollice in aria dal lato opposto): frena e "parcheggia" fino a 180° nel busto, poi li restituisce ("Stalled" se tenuta a lungo); dallo stesso lato spinge +15%;
   - **shifty** senza rotazione: solo la tavola, rotazione netta zero.
 - ✅ **Grab**: Nose, Mute, Indy, Tail (bottoni in aria o Q/W/E/R). Tenuto = raccolto e più veloce; lasciato = aperto, più lento e asse che si raddrizza; all'apice senza grab ti apri da solo. Conta se tenuto ≥ 0,15 s; vince il più lungo.
+  - ⚠️ **il rider prende la tavola** (versione base): ginocchia su, busto piegato sulla tavola, la mano va al punto del grab (Nose = mano davanti sulla punta, Mute = mano davanti sulla lamina di punta, Indy = mano dietro sulla lamina di punta, Tail = mano dietro sulla coda); il braccio si allunga un po' se non arriva. Niente tweak né animazione dettagliata, tutti i livelli di qualità.
 - ✅ **Nome del trick**: Frontside / Backside / Cab / Switch Backside + Double/Triple/Quad/Quint + Cork/Misty/Rodeo + gradi a multipli di 180 + grab; Frontflip/Backflip; Straight air, Shifty, Stalled.
 - ✅ **Atterraggio realistico** (ricerche 12 e 13): fasce (la peggiore decide, tolleranza ×1,7 su tutte) + fisica dopo il contatto:
   - **tavola vs marcia** (mod 180°): 8 / 16 / 28 / 45°; la **rotazione residua conta con il segno**: se gira verso l'allineamento aiuta, se gira via peggiora;

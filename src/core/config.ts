@@ -150,12 +150,9 @@ export const SPIN = {
    * pose (°/s), on top of the spin. Little push = slow flipping (e.g. cork 1800 with one inversion),
    * a lot = faster flipping (double, triple…). Same idea as the spin charge.
    */
-  OFF_MAX: 650,
+  OFF_MAX: 520,
   /** the weakest push still flips once over a whole flight: L_f ∝ OFF_MIN + (1 − OFF_MIN)·push */
   OFF_MIN: 0.35,
-  /** the off-axis flip ramps in between these spin angles (°): flat first half-turn (inversions ≈ turns − 1) */
-  TILT_FROM: 90,
-  TILT_TO: 270,
   /** spotting: once opened, if the flip is within this many degrees of a whole flip the rider closes it */
   SPOT_WINDOW: 25,
   /** ...at this rate at least (°/s), legacy LEVEL_RATE */

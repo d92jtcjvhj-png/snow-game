@@ -42,10 +42,12 @@ describe('rotation in the air', () => {
     expect(high.inv).toBeGreaterThanOrEqual(3);
   });
 
-  it('the off-axis flip starts flat (first half-turn) and, opened in time, is closed on a whole flip', () => {
+  it('the off-axis flip starts at the pop together with the spin and, opened in time, is closed on a whole flip', () => {
     const sp = initSpin(0.5, -1, 0.6, 1, 1);
+    // one fluid rotation: after the first steps both angles already move, in the same proportion as L_f / L
     for (let t = 0; t < 0.25; t += STEP) stepSpin(sp, { grab: 'indy', held: false, bar: 0 }, 8, STEP);
-    expect(Math.abs(sp.theta)).toBeLessThan(5);
+    expect(Math.abs(sp.theta)).toBeGreaterThan(20);
+    expect(Math.abs(sp.theta) / Math.abs(sp.phi)).toBeCloseTo(sp.Lf / sp.L, 2);
     fly(sp, 2.1, 1.2);
     expect(sp.flipDone).toBe(true);
     expect(Math.abs(sp.theta) % 360).toBe(0);
