@@ -6,11 +6,11 @@ const ORDER: LandingQuality[] = ['perfect', 'clean', 'sketchy', 'severe', 'crash
 const bump = (q: LandingQuality) => ORDER[Math.min(4, ORDER.indexOf(q) + 1)]!;
 
 export type LandingCause =
-  | 'ok' | 'yaw' | 'revert' | 'pitchFwd' | 'backseat' | 'roll' | 'inverted' | 'impact'
+  | 'ok' | 'yaw' | 'pitchFwd' | 'backseat' | 'roll' | 'inverted' | 'impact'
   | 'edge' | 'washout' | 'knuckle' | 'table' | 'offpiste' | 'nose';
 
 /** What the rider visibly does (docs/research 13: from stomp to slam). */
-export type LandingOutcome = 'stomp' | 'clean' | 'hand' | 'twohands' | 'buttcheck' | 'revert' | 'crash';
+export type LandingOutcome = 'stomp' | 'clean' | 'hand' | 'twohands' | 'buttcheck' | 'crash';
 
 export interface LandingInput {
   /** board forward, board lateral (+x = heel side) and body up at touchdown (world) */
@@ -47,7 +47,7 @@ export interface LandingEval {
   roll: number;
   /** edge angle at contact (°, + = heel side down) */
   contactEdge: number;
-  /** landed backwards: now riding switch (after a revert, the stance it rides away in) */
+  /** landed backwards: now riding switch */
   switchLand: boolean;
   /** signed board angle vs travel (°), for the diagram (|v| > 90 = switch) */
   yawSigned: number;
@@ -59,8 +59,8 @@ const band = (v: number, lim: readonly number[], k: number): LandingQuality =>
 /**
  * Landing judgment (docs/research 12, 13). The worst of: board yaw (residual spin signed), body pitch
  * forward (strict) / backward (forgiving, butt check), roll, impact (stricter with a grab still held),
- * edge catch / washout from the edge at contact, landing zone and a nose-first touchdown. A large yaw
- * with the residual spin carrying the board on round becomes a revert (rider stays up).
+ * edge catch / washout from the edge at contact, landing zone and a nose-first touchdown. No landing
+ * revert: a board too far across is a crash, whatever the residual spin (user feedback on PR #10).
  */
 export function evaluateLanding(i: LandingInput): LandingEval {
   const k = i.tolerance ? LANDING.TOLERANCE : 1;
@@ -90,11 +90,7 @@ export function evaluateLanding(i: LandingInput): LandingEval {
   const apply = (q: LandingQuality, c: LandingCause) => { if (ORDER.indexOf(q) > ORDER.indexOf(quality)) { quality = q; cause = c; } };
 
   if (dot(u, n) < 0) apply('crash', 'inverted');
-  // yaw, or a revert if the leftover spin carries the board on round to the next 180
-  const yawQ = band(yawErr, LANDING.YAW, k);
-  const spinsOn = Math.sign(i.residualOmega) === Math.sign(d) && Math.abs(i.residualOmega) >= LANDING.REVERT_OMEGA;
-  let revert = false;
-  if (yawQ === 'crash' && spinsOn) { revert = true; apply('severe', 'revert'); } else apply(yawQ, 'yaw');
+  apply(band(yawErr, LANDING.YAW, k), 'yaw');
   apply(pitch >= 0 ? band(pitch + flipRes, LANDING.PITCH_FWD, k) : band(-pitch + flipRes, LANDING.PITCH_BACK, k), pitch >= 0 ? 'pitchFwd' : 'backseat');
   apply(band(Math.abs(roll), LANDING.ROLL, k), 'roll');
   const efhK = k * (i.grabHeld ? LANDING.EFH_GRAB : 1);
@@ -116,8 +112,7 @@ export function evaluateLanding(i: LandingInput): LandingEval {
   const backward = c1 === 'backseat' || c1 === 'washout';
   const outcome: LandingOutcome =
     q1 === 'perfect' ? 'stomp' : q1 === 'clean' ? 'clean' : q1 === 'crash' ? 'crash'
-      : c1 === 'revert' ? 'revert' : backward ? 'buttcheck' : q1 === 'sketchy' ? 'hand' : 'twohands';
-  // after a revert the board ends up on the other line
-  const switchLand = revert ? !(fd < 0) : fd < 0;
+      : backward ? 'buttcheck' : q1 === 'sketchy' ? 'hand' : 'twohands';
+  const switchLand = fd < 0;
   return { quality: q1, cause, outcome, yawErr, tiltErr, pitch, roll, contactEdge, switchLand, yawSigned };
 }

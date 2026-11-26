@@ -190,8 +190,6 @@ export const LANDING = {
   /** edge catch: the leading (downhill-sliding) edge lowered more than this (°) with this much sideslip (m/s) */
   CATCH_EDGE: 5,
   CATCH_VLAT: 2,
-  /** revert: beyond the yaw limit, a residual spin of at least this (°/s) towards the next 180 lets the rider spin out and ride away */
-  REVERT_OMEGA: 100,
   /** legs' stroke for the absorption (m): extra normal load v_n²/(2d) for 2d/v_n seconds */
   ABSORB_D: 0.4,
   /** post-landing pivot back into line (rad/s): slower than a speed check, the skid shows */
