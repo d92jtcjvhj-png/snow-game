@@ -111,7 +111,7 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
 - ✅ **Grab**: Nose, Mute, Indy, Tail (bottoni in aria o Q/W/E/R). Tenuto = raccolto e più veloce; lasciato = aperto, più lento e asse che si raddrizza; all'apice senza grab ti apri da solo. Conta se tenuto ≥ 0,15 s con la mano sulla tavola; vince il più lungo.
   - ✅ **effetto per grab** (tabella `GRAB_K`, ricerca 15): Indy/Mute i più raccolti fra i quattro (spin ×0,80, ribaltamento ×0,60), Nose/Tail un po' meno (×0,88 / ×0,75).
   - ⚠️ tabella già pronta per i grab futuri (Truck Driver, Japan, Melon, Stalefish, Method, Crail, Stiffy, Tindy, ecc.), con i fattori su spin e ribaltamento; i bottoni per sceglierli non ci sono ancora.
-  - ⚠️ **il rider prende la tavola** (versione base): ginocchia su, busto piegato sulla tavola, la mano va al punto del grab (Nose = mano davanti sulla punta, Mute = mano davanti sulla lamina di punta, Indy = mano dietro sulla lamina di punta, Tail = mano dietro sulla coda); il braccio si allunga un po' se non arriva. Niente tweak né animazione dettagliata, tutti i livelli di qualità.
+  - ✅ **il rider prende la tavola** (ricerca 14): ginocchia al petto e busto piegato mentre il raccolto fisico si chiude, la mano raggiunge il punto del grab con l'IK (Nose = mano davanti sulla punta, Mute = mano davanti sulla lamina di punta, Indy = mano dietro sulla lamina di punta verso l'attacco posteriore, Tail = mano dietro sulla coda); il braccio libero va in alto per l'equilibrio; Nose/Tail portano su il ginocchio dalla parte giusta. Pose già pronte anche per Japan, Melon, Stalefish, Method, Crail, Seatbelt, Tindy, Tailfish, Truck Driver, Stiffy, Rocket. Niente tweak.
 - ✅ **Nome del trick**: Frontside / Backside / Cab / Switch Backside + Double/Triple/Quad/Quint + Cork/Misty/Rodeo + gradi a multipli di 180 + grab; Frontflip/Backflip; Straight air, Shifty, Stalled.
 - ✅ **Atterraggio realistico** (ricerche 12 e 13): fasce (la peggiore decide, tolleranza ×1,7 su tutte) + fisica dopo il contatto:
   - **tavola vs marcia** (mod 180°): 8 / 16 / 28 / 45°; la **rotazione residua conta con il segno**: se gira verso l'allineamento aiuta, se gira via peggiora;
@@ -124,7 +124,7 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
   - **fisica al contatto**: impulso d'attrito che cresce con la tavola storta (chi atterra storto perde velocità), carico delle gambe (~4× il peso per 0,15–0,3 s) che fa derapare di più, riallineamento lento (~140°/s) così la derapata si vede;
   - **esiti**: Stomp, Pulito, Mano a terra, Due mani, Butt check (perdi velocità), Caduta;
   - **caduta per causa**: edge catch = sbalzato sulle punte e frenata forte; in avanti = sulla punta; indietro = sulla schiena, scivola di più; il rider si ribalta nel verso giusto;
-  - **gambe che si comprimono** all'atterraggio, in proporzione all'impatto (animazione, tutti i livelli di qualità);
+  - **assorbimento** all'atterraggio, in proporzione all'impatto: ginocchia fino a ~90°, petto sopra il ginocchio anteriore, mani avanti alle ginocchia; **mano a terra** (mano posteriore dietro, lato tallone), **due mani** e **butt check** (seduto sui talloni, poi si rialza) si vedono nel corpo (animazione, tutti i livelli di qualità);
   - **atterrare al contrario (~180°) è pulito e prosegui in switch** (stance della tavola nella fisica).
 - ✅ **Bussola in aria**: oltre all'allineamento mostra "Inclinato N°" se il corpo è ancora inclinato.
 - ✅ **Scheda**: nome del trick, esito (Stomp … Caduta), nota per causa, consiglio, diagramma della tavola, gradi reali, inversioni, grab, tempo in aria, punto d'atterraggio, impatto, errore della tavola, inclinazione avanti/indietro e di lato, lamina al contatto; sotto, i dati di stacco.
@@ -141,10 +141,12 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
 
 ## A7. Grafica
 - ✅ Stile low-poly cartoon: flat shading, palette del legacy, abeti e montagne con seed fisso, nebbia.
-- ✅ Rider a blocchi portato dal legacy: nose giallo e tail viola, petto bianco sul lato punta.
-  - Si inclina con la lamina e la tavola rolla con lui.
-  - Carica le spalle in senso opposto al verso, proporzionalmente alla carica.
-  - Si accoscia; braccia aperte in aria.
+- ✅ **Rider articolato** (ricerca 14), costruito in codice, low-poly con flat shading: proporzioni reali (H 1,76 m, Drillis & Contini), pantaloni e giacca larghi, casco rosso e maschera, scarponi e highback su attacchi a papera +15/−15, tavola gialla (nose) e viola (tail), petto bianco sul lato punta. Cosce, stinchi, braccia e avambracci separati; ~20 mesh, tutti i livelli di qualità.
+  - **Piedi bloccati sugli attacchi e mani piazzate con IK a due ossa** (ginocchia verso le punte di ogni piede, gomiti in fuori).
+  - **Pose chiave della ricerca** fuse dai dati della fisica e ammorbidite con molle critiche (tempi della Tab. 5): scivolata atletica (ginocchia ~33°), curva di tallone (seduto, braccio davanti alto) e di punta (ginocchia verso la neve, mani avanti basse), speed check (seduto, busto avanti, braccia avanti), carica (accosciata ~62° e spalle caricate contro il verso dello spin), distensione al labbro, posa compatta in aria, raccolto e apertura dalle molle fisiche, assorbimento, atterraggi sporchi, caduta protettiva.
+  - Testa che guarda sopra la spalla anteriore e tiene lo sguardo a livello; piccolo movimento delle mani in scivolata.
+  - Si inclina con la lamina (angolazione: un po' meno della tavola) e cade nel verso della causa.
+  - ❌ Spalla che scende nello stacco fuori asse, tweak e poke, reazioni diverse per edge catch di punta e di tallone oltre al ribaltamento.
 - ✅ Spruzzo di neve in derapata e nello speed check; il numero di particelle dipende dalla qualità.
 - ✅ Kicker leggermente azzurro, linea blu sul labbro, linea rossa sul knuckle, tacche ogni 5 m.
 - ✅ Bordi blu dell'atterraggio, bandierine, reti arancioni, cancello di partenza.
@@ -152,7 +154,7 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
 - ✅ **Qualità adattiva**:
   - livelli low / medium / high: pixel ratio 1 / 1,5 / 2; ombre solo high; alberi 90 / 150 / 220; particelle 60 / 150 / 260;
   - scende se il frame resta > 20 ms per 2 s, sale se resta < 12 ms per 5 s.
-- ❌ Animazioni del rider più ricche, tracce sulla neve, effetti in aria.
+- ❌ Tracce sulla neve, effetti in aria.
 
 ## A8. Interfaccia e allenamento
 - ✅ Intro con i comandi, HUD (km/h, lamina heel/toe con gradi, fps e qualità), barra di carica con "Frontside 80% · stacco di tallone".
