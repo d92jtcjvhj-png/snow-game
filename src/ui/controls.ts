@@ -82,11 +82,14 @@ export function createControls(root: HTMLElement, input: Input): Controls {
 
   // off-axis stick
   const stick = $('stick'), sKnob = $('stickKnob');
-  let S: number | null = null;
+  let S: number | null = null, axisBuzz = 0;
   const fromEvent = (e: PointerEvent) => {
     const r = stick.getBoundingClientRect(), R = r.width / 2;
     const dy = Math.max(-1, Math.min(1, -(e.clientY - (r.top + R)) / (R - 16)));
     t.axis = Math.abs(dy) < 0.08 ? 0 : dy;
+    // second power: a light tick every 25 % of off-axis push
+    const q = Math.floor(Math.max(0, (Math.abs(dy) - POP.AXIS_DEAD) / (1 - POP.AXIS_DEAD)) * 4);
+    if (q !== axisBuzz) { axisBuzz = q; vibrate(6); }
     sKnob.style.transform = `translateY(${-dy * (R - 30)}px)`;
   };
   stick.addEventListener('pointerdown', (e) => { e.preventDefault(); S = e.pointerId; stick.setPointerCapture(e.pointerId); t.stickActive = true; fromEvent(e); });

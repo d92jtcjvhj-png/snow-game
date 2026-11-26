@@ -1,6 +1,6 @@
 import type RAPIER from '@dimforge/rapier3d-compat';
 import { BOARD_GROUPS } from './world';
-import { BOARD, DEG, GRAVITY, SNOW } from '../core/config';
+import { BOARD, DEG, GRAVITY, SNOW, SOFT_SNOW } from '../core/config';
 import { dragK, lateralImpulse, longitudinalImpulse } from './snow';
 import { add, clamp, cross, dot, len, norm, quatFromBasis, scale, sub, v3, wrap, type Q4, type V3 } from './vec';
 import type { Rapier } from './world';
@@ -8,6 +8,8 @@ import type { Rapier } from './world';
 /** The snow surface, analytic: the same function the terrain mesh is built from. */
 export interface Ground {
   heightAt(x: number, z: number): number;
+  /** 0 on the groomed surface, 1 in deep soft snow (optional) */
+  softAt?(x: number, z: number): number;
 }
 
 export interface BoardCmd {
@@ -45,6 +47,11 @@ export class Board {
   skidding = false;
   /** +1 riding regular (nose first), −1 riding switch (tail first): set after a 180-type landing */
   stance: 1 | -1 = 1;
+  /** pivot rate back into line when not carving (rad/s): slower right after a landing (the skid shows) */
+  pivotRate: number = BOARD.CHECK_YAW_RATE;
+  /** extra normal load while the legs absorb a landing (m/s²) and for how long (s) */
+  private absorbA = 0;
+  private absorbT = 0;
   /** lateral acceleration felt by the rider (m/s², + towards +x): drives the visual lean */
   aLat = 0;
   /** board yaw rate (rad/s) */
@@ -73,6 +80,7 @@ export class Board {
   /** Place the board at rest on the surface at (x, y, z), pointing downhill. */
   reset(x: number, y: number, z: number): void {
     this.psi = 0; this.edge = 0; this.kv = 0; this.aLat = 0; this.yawRate = 0; this.stance = 1;
+    this.pivotRate = BOARD.CHECK_YAW_RATE; this.absorbA = 0; this.absorbT = 0;
     this.normal = v3(0, 1, 0);
     this.body.setTranslation({ x, y: y + BOARD.RADIUS, z }, true);
     this.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
@@ -92,6 +100,26 @@ export class Board {
   snapshot(): void {
     this.prevPos = this.position();
     this.prevRot = { ...this.rot };
+  }
+
+  /**
+   * Touchdown physics (docs/research 13): only the velocity into the snow is lost, plus a tangential
+   * friction impulse that grows with the board's misalignment (min(|v_t|, μ(Δψ)·v_n)), and the legs'
+   * absorption load for 2d/v_n seconds. `misalign` = |sin| of board vs travel.
+   */
+  landImpact(misalign: number, absorbD: number): void {
+    const vn = this.impactSpeed;
+    const v = this.velocity(), n = this.normal;
+    const vt = sub(v, scale(n, dot(v, n))), vtl = len(vt);
+    const mu = SNOW.MU_SKID * misalign + SNOW.MU_LONG * (1 - misalign);
+    if (vtl > 1e-6) this.body.setLinvel(sub(v, scale(vt, Math.min(vtl, mu * vn) / vtl)), true);
+    if (vn > 0.1) { this.absorbA = (vn * vn) / (2 * absorbD); this.absorbT = (2 * absorbD) / vn; }
+  }
+
+  /** Scale the velocity (a butt check or a slam scrubs speed at once). */
+  scrub(factor: number): void {
+    const v = this.velocity();
+    this.body.setLinvel(scale(v, factor), true);
   }
 
   /** Exact surface normal at (x, z) from the analytic height. */
@@ -174,6 +202,8 @@ export class Board {
       this.kv = this.pathCurvature(this.position(), speed > 0.5 ? Math.atan2(v.x, v.z) : this.psi);
       const vf = dot(v, f);
       this.aN = Math.max(0, GRAVITY * this.normal.y + vf * vf * this.kv);
+      // the legs absorbing a landing push the board into the snow: ~4 body weights for 0.15–0.3 s
+      if (this.absorbT > 0) { this.aN += this.absorbA; this.absorbT -= dt; }
 
       // edge: speed check (heel edge) overrides the rider's carve
       const braking = cmd.brake > 0.02;
@@ -195,7 +225,7 @@ export class Board {
         if (Math.abs(cmd.kappa) < 1e-4 || Math.abs(off) > SNOW.SKID_ANGLE) {
           // not carving (or coming out of a speed check): the rider pivots the board back in line with
           // the direction of travel, so a check never sends him sideways
-          this.psi += clamp(off, -BOARD.CHECK_YAW_RATE * dt, BOARD.CHECK_YAW_RATE * dt);
+          this.psi += clamp(off, -this.pivotRate * dt, this.pivotRate * dt);
         }
       }
       this.psi = wrap(this.psi);
@@ -239,6 +269,14 @@ export class Board {
       this.edge += clamp(-this.edge, -SNOW.EDGE_RATE * dt, SNOW.EDGE_RATE * dt);
     }
 
+    // soft snow off the groomed surface: the board sinks and ploughs (docs/research 13)
+    if (this.grounded && this.ground.softAt) {
+      const soft = this.ground.softAt(this.position().x, this.position().z);
+      if (soft > 0) {
+        const vt = sub(v, scale(this.normal, dot(v, this.normal))), vtl = len(vt);
+        if (vtl > 1e-6) dv = add(dv, scale(vt, -Math.min(vtl, SOFT_SNOW.MU * soft * this.aN * dt) / vtl));
+      }
+    }
     // aerodynamic drag
     const k = dragK(cmd.tuck ? SNOW.CDA_TUCK : SNOW.CDA);
     dv = add(dv, scale(v, -k * speed * dt));

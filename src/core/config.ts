@@ -145,14 +145,20 @@ export const SPIN = {
   FLIP_MAX: 320,
   /** the spin builds up over the first moments (shoulders lead, board follows), legacy */
   RAMP_IN: 0.28,
-  /** cork tilt target from the stick: 35° + 35°·stick; misty/rodeo steeper */
-  TILT_MIN: 35,
-  TILT_GAIN: 35,
-  TILT_FLIPPY: 15,
-  /** the axis ramps in between these yaw angles (°): flat first half-turn → inversions = turns − 1 */
+  /**
+   * Off-axis push (second power, the stick): flip rate around the lateral axis at 100 % in the neutral
+   * pose (°/s), on top of the spin. Little push = slow flipping (e.g. cork 1800 with one inversion),
+   * a lot = faster flipping (double, triple…). Same idea as the spin charge.
+   */
+  OFF_MAX: 650,
+  /** the weakest push still flips once over a whole flight: L_f ∝ OFF_MIN + (1 − OFF_MIN)·push */
+  OFF_MIN: 0.35,
+  /** the off-axis flip ramps in between these spin angles (°): flat first half-turn (inversions ≈ turns − 1) */
   TILT_FROM: 90,
   TILT_TO: 270,
-  /** opening up levels the axis (°/s), legacy LEVEL_RATE */
+  /** spotting: once opened, if the flip is within this many degrees of a whole flip the rider closes it */
+  SPOT_WINDOW: 25,
+  /** ...at this rate at least (°/s), legacy LEVEL_RATE */
   LEVEL_RATE: 130,
   /** counter-rotation (legacy): torso brake (°/s), parked degrees and their release */
   BRAKE_RATE: 260,
@@ -162,15 +168,41 @@ export const SPIN = {
   GRAB_MIN: 0.15,
 } as const;
 
-/** Landing bands (docs/research 12): the worst row decides. Tolerance (training) multiplies them. */
+/**
+ * Landing (docs/research 12 and 13). Bands: perfect / clean / sketchy / severe, beyond = crash; the
+ * worst row decides. Tolerance (training) multiplies every band. Physics then does the rest.
+ */
 export const LANDING = {
-  /** board yaw vs travel (mod 180°): perfect / clean / sketchy / severe, beyond = crash (legacy 8/16, research ≤12–25–45) */
+  /** board yaw vs travel (mod 180°), with the residual spin signed (it helps if it turns towards line) */
   YAW: [8, 16, 28, 45],
-  /** body tilt vs the vertical (°): the legs adapt the board to the landing slope */
-  TILT: [8, 15, 25, 40],
-  /** equivalent fall height (m) */
+  /** body pitch FORWARD vs the vertical (°): strict, ends in a nose dive (OR ≈ 4) */
+  PITCH_FWD: [8, 15, 25, 35],
+  /** body pitch BACKWARD (°): more forgiving, ends in a butt check before a fall (51 % of falls are backward, often saved) */
+  PITCH_BACK: [10, 20, 35, 50],
+  /** body roll sideways (°) */
+  ROLL: [8, 15, 25, 40],
+  /** equivalent fall height (m): 1.5 m design value, athletes up to ~2.6–3 m (Minetti 1998) */
   EFH: [0.8, 1.5, 2.5, 3.5],
-  /** residual spin counts as extra yaw error over this time (s) */
+  /** a grab still held at touchdown shortens the legs' stroke: EFH bands × this */
+  EFH_GRAB: 0.6,
+  /** residual spin/flip counts as extra error over this time (s): edge grip stops ~360 °/s in 5–8° */
   RESIDUAL_T: 0.02,
+  /** edge catch: the leading (downhill-sliding) edge lowered more than this (°) with this much sideslip (m/s) */
+  CATCH_EDGE: 5,
+  CATCH_VLAT: 2,
+  /** revert: beyond the yaw limit, a residual spin of at least this (°/s) towards the next 180 lets the rider spin out and ride away */
+  REVERT_OMEGA: 100,
+  /** legs' stroke for the absorption (m): extra normal load v_n²/(2d) for 2d/v_n seconds */
+  ABSORB_D: 0.4,
+  /** post-landing pivot back into line (rad/s): slower than a speed check, the skid shows */
+  REALIGN_RATE: 2.4,
   TOLERANCE: 1.7,
+} as const;
+
+/** Soft snow outside the prepared surface (docs/research 13): sinking drag and a lower impact. */
+export const SOFT_SNOW = {
+  /** extra longitudinal friction once off the groomed surface */
+  MU: 0.22,
+  /** EFH is softened by this factor in deep snow */
+  EFH: 0.7,
 } as const;

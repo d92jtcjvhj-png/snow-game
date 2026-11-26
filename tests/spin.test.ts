@@ -30,11 +30,25 @@ describe('rotation in the air', () => {
     expect(sp.phi).toBeLessThan(0);
   });
 
-  it('cork with the axis ramping in: inversions = turns − 1 (double cork 1080)', () => {
-    const sp = initSpin(0.5, -1, 1, 1, 1);
-    fly(sp, 2.4, 1.6);
-    expect(Math.round(Math.abs(sp.phi) / 180) * 180).toBe(1080);
-    expect(sp.inv).toBe(2);
+  it('second power: more off-axis push = more inversions in the same spin', () => {
+    const run = (push: number) => {
+      const sp = initSpin(0.8, -1, 0.2 + 0.8 * push, 1, 1);
+      fly(sp, 2.3, 1.4);
+      return sp;
+    };
+    const low = run(0.1), high = run(1);
+    expect(low.inv).toBeGreaterThanOrEqual(1);
+    expect(high.inv).toBeGreaterThan(low.inv);
+    expect(high.inv).toBeGreaterThanOrEqual(3);
+  });
+
+  it('the off-axis flip starts flat (first half-turn) and, opened in time, is closed on a whole flip', () => {
+    const sp = initSpin(0.5, -1, 0.6, 1, 1);
+    for (let t = 0; t < 0.25; t += STEP) stepSpin(sp, { grab: 'indy', held: false, bar: 0 }, 8, STEP);
+    expect(Math.abs(sp.theta)).toBeLessThan(5);
+    fly(sp, 2.1, 1.2);
+    expect(sp.flipDone).toBe(true);
+    expect(Math.abs(sp.theta) % 360).toBe(0);
   });
 
   it('straight flips: stick up = frontflip, down = backflip', () => {

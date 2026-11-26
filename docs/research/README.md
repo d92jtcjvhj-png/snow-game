@@ -23,6 +23,8 @@ Ogni affermazione ha la sua fonte. Molte pagine erano bloccate dalla rete della 
 | `11-curve-fluide.md` | Note: curve collegate quasi sinusoidali (curvatura per lo zero solo un istante, niente tratti dritti), lamina che cresce e cala in modo progressivo, molla smorzata per l'inclinazione |
 | `12-trick-fase-3.md` | **Report Fase 3**: rotazioni in asse e fuori asse (cork, double/triple/quad, rodeo, misty, underflip, flip), momento angolare e inerzia, record al 2026 (BS 2340), giudizio FIS, cosa decide atterraggio pulito o caduta |
 | `12-note-*.md` | Note di base del report 12 (spin in asse, fuori asse, record e giudizio, esiti d'atterraggio) |
+| `13-atterraggio-realistico.md` | **Report**: atterraggio reale (contatto di coda, gambe ~4× il peso, edge catch vs washout vs derapata, rotazione residua, esiti da stomp a slam) confrontato col modello del gioco, con modifiche proposte per priorità |
+| `13a-note-biomeccanica-atterraggio.md`, `13b-note-catalogo-esiti.md` | Note di base del report 13 |
 
 **Scelta di design (utente) sul report 08.** Per il ritardo il report proponeva di tenere la S compressa. Si è scelto invece il modello "il labbro taglia la S": la linea ha lunghezza fissa dall'inizio della carica, e punto, angolo e lamina allo stacco dipendono solo da quando inizi a caricare e da quanto carichi. Nessun aggiustamento automatico.
 
