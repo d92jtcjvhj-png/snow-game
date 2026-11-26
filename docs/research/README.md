@@ -29,6 +29,8 @@ Ogni affermazione ha la sua fonte. Molte pagine erano bloccate dalla rete della 
 | `14a`–`14e-note-*.md` | Note di base del report 14 (andatura, stacco, aria e grab, atterraggio e cadute, proporzioni e limiti) |
 | `15-grab-e-accelerazione.md` | **Report**: come i grab cambiano la rotazione (il grab ridistribuisce L, non lo aggiunge): inerzie per posa su asse spin e asse flip con la tavola, catalogo di tutti i grab con fattori k_spin/k_flip, tempistica (presa, tenuta, rilascio), effetto sull'asse dei cork e sull'atterraggio, proposte per il gioco e test. Quasi tutto STIMA: la rete della sessione bloccava i testi completi |
 | `15a`–`15d-note-*.md` | Note di base del report 15 (inerzia, catalogo grab, tempistica, fuori asse) |
+| `16-grafica-realistica.md` | **Report**: rifare la grafica più realistica e meno a cubotti con uno stile originale: luce e palette, neve (normali lisce da h(x,z), toni, scintillio, battitura, tracce), cielo, nebbia, montagne a strati, alberi istanziati, particelle, tone mapping, rider morbido (SkinnedMesh generato in codice), budget e livelli di qualità, piano in passi e decisioni per l'utente |
+| `16a`–`16d-note-*.md` | Note di base del report 16 (direzione artistica, neve/cielo/luce, rider morbido, budget di prestazioni) |
 
 **Scelta di design (utente) sul report 08.** Per il ritardo il report proponeva di tenere la S compressa. Si è scelto invece il modello "il labbro taglia la S": la linea ha lunghezza fissa dall'inizio della carica, e punto, angolo e lamina allo stacco dipendono solo da quando inizi a caricare e da quanto carichi. Nessun aggiustamento automatico.
 
