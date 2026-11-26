@@ -1,5 +1,5 @@
 import { DEG, POP, SPIN } from '../core/config';
-import { qAxis, qMul, qRot, smoothstep, type Q4 } from './vec';
+import { qAxis, qMul, qRot, type Q4 } from './vec';
 
 /** Grab buttons (compact grabs: they all tuck the rider and speed the spin up). */
 export type GrabId = 'nose' | 'mute' | 'indy' | 'tail';
@@ -12,7 +12,7 @@ export type TiltType = 'flat' | 'cork' | 'misty' | 'rodeo';
  * Rotation in the air, in the board's takeoff frame (x = heel side, y = up, z = nose).
  * Ported from the legacy SIM (initSpin / stepAir / airQuat) with angular-momentum physics and TWO
  * powers: the spin (left thumb, L) and the off-axis push (stick, L_f). ω = L / I(pose) for both;
- * the off-axis flip ramps in after the first half-turn of spin.
+ * the off-axis flip starts at the pop together with the spin: one fluid rotation about a tilted axis.
  */
 export interface SpinState {
   mode: SpinMode;
@@ -135,11 +135,11 @@ export function stepSpin(sp: SpinState, inp: SpinInput, vy: number, dt: number):
     }
     sp.phi += sp.dir * adv;
     sp.omega = adv / dt;
-    // off-axis flip (second power): starts after the first half-turn of spin, ω_f = L_f / I(pose).
+    // off-axis flip (second power): starts at the pop with the spin, same ramp-in (one rotation about a
+    // tilted axis, docs/research 12: the axis is set at takeoff), ω_f = L_f / I(pose).
     // Opened up, within SPOT_WINDOW of a whole flip, the rider spots the landing and closes it.
     if (sp.tiltType !== 'flat' && !sp.flipDone) {
-      const ramp = smoothstep((Math.abs(sp.phi) - SPIN.TILT_FROM) / (SPIN.TILT_TO - SPIN.TILT_FROM));
-      let wf = (sp.Lf / I) * ramp;
+      let wf = (sp.Lf / I) * rampIn(sp.airT);
       const a = Math.abs(sp.theta), next = Math.ceil(a / 360 - 1e-9) * 360, rem = next - a;
       if (sp.opened && !grabbing && a > 90 && rem < SPIN.SPOT_WINDOW) {
         wf = Math.max(wf, SPIN.LEVEL_RATE);

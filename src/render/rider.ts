@@ -23,6 +23,14 @@ export interface RiderPose {
   absorb?: number;
 }
 
+/** where each grab's hand goes, in the board frame (x = heel side, y = up, z = nose) */
+const GRAB_POINT: Record<NonNullable<RiderPose['grab']>, [number, number, number]> = {
+  nose: [0, 0.06, 0.6], mute: [-0.13, 0.04, 0.16], indy: [-0.13, 0.04, -0.06], tail: [0, 0.06, -0.6],
+};
+/** shoulder to the middle of the hand (m, before the 1.25 scale) */
+const ARM_LEN = 0.53;
+const DOWN = new THREE.Vector3(0, -1, 0);
+
 /**
  * Low-poly block rider, ported from the legacy prototype: board half yellow (nose) / half purple (tail),
  * white chest on the toe side (−x), dark back, red head. Regular stance, facing −x.
@@ -36,6 +44,11 @@ export class Rider {
   private readonly armF: THREE.Group;
   private readonly armR: THREE.Group;
   private cr = 0;
+  /** 0..1: grab blend (knees up, torso folded over the board, hand on the board) */
+  private gr = 0;
+  private readonly tmpM = new THREE.Matrix4();
+  private readonly tmpV = new THREE.Vector3();
+  private readonly tmpQ = new THREE.Quaternion();
   private crashT = 0;
   /** body roll as a critically damped spring (docs/research 11): smooth lean, no snapping */
   private rollV = 0;
@@ -81,11 +94,16 @@ export class Rider {
     const crouch = Math.max(p.crouch, p.absorb ?? 0);
     this.cr += (crouch - this.cr) * Math.min(1, dt * (crouch < this.cr ? 14 : 20));
     const c = this.cr;
-    this.legF.scale.y = this.legR.scale.y = 1 - 0.36 * c;
-    this.legF.position.y = this.legR.position.y = 0.4 * (1 - 0.36 * c);
-    this.torso.position.y = 0.74 - 0.26 * c;
-    this.torso.rotation.z = 0.22 * c;
-    this.torso.rotation.y += (p.twist - this.torso.rotation.y) * Math.min(1, dt * 8);
+    const grab = p.airborne && !p.crash ? p.grab ?? null : null;
+    this.gr += ((grab ? 1 : 0) - this.gr) * Math.min(1, dt * 14);
+    const g = this.gr;
+    // grab: knees pulled up (shorter legs) and the torso folded forward over the toe edge
+    const legK = 1 - 0.36 * c - 0.16 * g;
+    this.legF.scale.y = this.legR.scale.y = legK;
+    this.legF.position.y = this.legR.position.y = 0.4 * legK;
+    this.torso.position.y = 0.74 - 0.26 * c - 0.1 * g;
+    this.torso.rotation.z = 0.22 * c + 0.7 * g;
+    this.torso.rotation.y += ((grab ? 0 : p.twist) - this.torso.rotation.y) * Math.min(1, dt * 8);
     // arms (legacy poses): relaxed, wound up, opened in the air, or reaching for a grab
     const toe = -0.55;
     let fx = -0.5 * p.arms, rx = 0.5 * p.arms, fz = 0.15, rz = 0.15;
@@ -99,6 +117,19 @@ export class Rider {
     const k = Math.min(1, dt * 12);
     this.armF.rotation.x += (fx - this.armF.rotation.x) * k; this.armR.rotation.x += (rx - this.armR.rotation.x) * k;
     this.armF.rotation.z += (fz - this.armF.rotation.z) * k; this.armR.rotation.z += (rz - this.armR.rotation.z) * k;
+    // the grabbing hand reaches the board: aim the arm at the grab point (board frame) and stretch it a bit
+    // if it falls short (cartoon). Nose/Mute = front hand, Indy/Tail = rear hand; Mute/Indy on the toe edge (−x).
+    const reach = grab ? GRAB_POINT[grab] : null;
+    const armG = grab === 'nose' || grab === 'mute' ? this.armF : this.armR;
+    for (const a of [this.armF, this.armR]) if (a !== armG || !reach) a.scale.y += (1 - a.scale.y) * k;
+    if (reach && g > 0.05) {
+      this.torso.updateMatrix();
+      const t = this.tmpV.set(reach[0], reach[1], reach[2]).applyMatrix4(this.tmpM.copy(this.torso.matrix).invert()).sub(armG.position);
+      const len = t.length();
+      this.tmpQ.setFromUnitVectors(DOWN, t.normalize());
+      armG.quaternion.slerp(this.tmpQ, g);
+      armG.scale.y += (Math.min(1.35, Math.max(1, len / ARM_LEN)) - armG.scale.y) * k;
+    }
     // crash: tip over in the direction of the cause (docs/research 13)
     //  nose = over the nose (pitch forward), toe = thrown face-first over the toe edge (edge catch),
     //  back = sat down on the heels / back, side = sideways
