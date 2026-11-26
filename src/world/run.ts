@@ -281,7 +281,7 @@ export class Run {
     };
     // rotation: angular momentum set at the pop (Phase 3)
     const power = this.takeoff.power, dirSpin = kind === 'frontside' ? 1 : kind === 'backside' ? -1 : 0;
-    this.spin = initSpin(dirSpin ? power : 0, dirSpin, this.takeoff.axis, this.takeoff.popQ, carveHelp);
+    this.spin = initSpin(dirSpin ? power : 0, dirSpin, this.takeoff.axis, this.takeoff.popQ, carveHelp, this.predictAirTime());
     // the rotation is measured from the direction of travel at the lip (legacy), not from a skidding board
     this.takeoffYaw = travel;
     this.takeoffPitch = Math.atan2(-b.normal.z * Math.cos(b.psi) - b.normal.x * Math.sin(b.psi), b.normal.y);
@@ -362,6 +362,20 @@ export class Run {
     const q = this.airOrientation() ?? { x: 0, y: 0, z: 0, w: 1 };
     this.phase = prev;
     return q;
+  }
+
+  /** Predicted flight time from the current state (ballistic with drag over h(x, z)), for the off-axis plan. */
+  predictAirTime(): number {
+    const p = this.board.position(), v = this.board.velocity();
+    let { x, y, z } = p, vx = v.x, vy = v.y, vz = v.z;
+    const k = dragK(), dt = STEP, off = y - heightAt(x, z);
+    for (let t = dt; t < 6; t += dt) {
+      const sp = Math.hypot(vx, vy, vz);
+      vx -= k * sp * vx * dt; vz -= k * sp * vz * dt; vy -= (9.81 + k * sp * vy) * dt;
+      x += vx * dt; y += vy * dt; z += vz * dt;
+      if (t > 0.15 && y - off <= heightAt(x, z)) return t;
+    }
+    return 6;
   }
 
   /** Ballistic prediction of the landing point from the current state (training ring). */

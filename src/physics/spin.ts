@@ -1,4 +1,4 @@
-import { DEG, GRAB_K, POP, SPIN } from '../core/config';
+import { DEG, GRAB_K, POP, SPIN, STEP } from '../core/config';
 import { qAxis, qMul, qRot, type Q4 } from './vec';
 
 /**
@@ -71,6 +71,13 @@ export interface SpinState {
   openV: number;
   /** grab whose shape the tuck is in (kept while letting go) */
   shape: GrabId | null;
+  /**
+   * Off-axis plan made at the pop (docs/research 17): the most inversions the predicted spin allows,
+   * floor((D − 180)/360), and for a spin too small to invert (< 540) a corked dip that comes back.
+   */
+  nMax: number;
+  dipPeak: number;
+  dipT: number;
 }
 
 export interface SpinInput {
@@ -83,14 +90,22 @@ export interface SpinInput {
 
 /**
  * Set up the rotation at the pop. `power` 0..1 and `dir` from the charge, `axis` from the stick,
- * `popQ` the pop quality, `carveHelp` the set-up carve's help (Phase 2; worth up to ~10 %).
+ * `popQ` the pop quality, `carveHelp` the set-up carve's help (Phase 2; worth up to ~10 %),
+ * `airTime` the predicted flight (s, from the ballistic arc over h(x, z)).
+ *
+ * Off-axis (docs/research 17): the degrees of a trick are 360·flips + a twist of at least 180°, so a
+ * spin of D degrees allows at most floor((D − 180)/360) inversions. The push is a precise amount, not a
+ * choice snapped by the game: it sets how many flips fit in the flight, from 0 to half a flip beyond
+ * that limit, in the reference pose (grab after the pop, open for the landing). The right amount
+ * closes a whole number of flips; too much goes over, too little stays short. A spin below 540° can't
+ * invert: the push only corks it (a dip that comes back).
  */
-export function initSpin(power: number, dir: number, axis: number, popQ: number, carveHelp: number | null): SpinState {
+export function initSpin(power: number, dir: number, axis: number, popQ: number, carveHelp: number | null, airTime = 2.4): SpinState {
   const sp: SpinState = {
     mode: 'none', dir: 0, L: 0, phi: 0, theta: 0, tiltType: 'flat', tiltSgn: 0, Lf: 0, axisPower: 0, tilt: 0, flipDone: false,
     shifty: 0, maxShifty: 0, parked: 0, stall: 0, stalled: false, inv: 0, wasInv: false, airT: 0,
     apex: false, opened: false, grabbing: false, everGrabbed: false, curGrab: null, grabTimes: {},
-    power, axis, omega: 0, tuck: 0, tuckV: 0, open: 0, openV: 0, shape: null,
+    power, axis, omega: 0, tuck: 0, tuckV: 0, open: 0, openV: 0, shape: null, nMax: 0, dipPeak: 0, dipT: 0,
   };
   const qf = 0.55 + 0.45 * popQ;
   const ay = Math.abs(axis);
@@ -112,7 +127,7 @@ export function initSpin(power: number, dir: number, axis: number, popQ: number,
     sp.tiltSgn = up ? 1 : -1;
     sp.tiltType = up ? 'cork' : sp.dir > 0 ? 'misty' : 'rodeo';
     sp.axisPower = a;
-    sp.Lf = (SPIN.OFF_MIN + (1 - SPIN.OFF_MIN) * a) * SPIN.OFF_MAX * qf * SPIN.IF_NEUTRAL;
+    planOffAxis(sp, a, airTime);
   }
   return sp;
 }
@@ -173,11 +188,17 @@ export function stepSpin(sp: SpinState, inp: SpinInput, vy: number, dt: number):
     sp.omega = adv / dt;
     // off-axis flip (second power): starts at the pop with the spin, same ramp-in (one rotation about a
     // tilted axis, docs/research 12: the axis is set at takeoff), ω_f = L_f / I(pose).
-    // Opened up, within SPOT_WINDOW of a whole flip, the rider spots the landing and closes it.
-    if (sp.tiltType !== 'flat' && !sp.flipDone) {
+    // Opened up, within SPOT_WINDOW of a whole flip the trick allows, the rider spots the landing and closes it.
+    if (sp.tiltType !== 'flat' && !sp.flipDone && sp.nMax === 0 && sp.dipT > 0) {
+      // spin too small to invert (< 540°): the cork is only a dip of the axis that comes back
+      const u = Math.min(1, sp.airT / sp.dipT);
+      sp.theta = sp.tiltSgn * sp.dipPeak * Math.sin(Math.PI * u);
+      if (u >= 1) { sp.theta = 0; sp.flipDone = true; }
+      sp.tilt = Math.abs(sp.theta);
+    } else if (sp.tiltType !== 'flat' && !sp.flipDone) {
       let wf = (sp.Lf / IF) * rampIn(sp.airT);
       const a = Math.abs(sp.theta), next = Math.ceil(a / 360 - 1e-9) * 360, rem = next - a;
-      if (sp.opened && !grabbing && a > 90 && rem < SPIN.SPOT_WINDOW) {
+      if (sp.opened && !grabbing && a > 90 && rem < SPIN.SPOT_WINDOW && next <= 360 * sp.nMax) {
         wf = Math.max(wf, SPIN.LEVEL_RATE);
         if (wf * dt >= rem) { sp.theta = sp.tiltSgn * next; sp.flipDone = true; wf = 0; }
       }
@@ -214,4 +235,27 @@ export function mainGrab(sp: SpinState): { grab: GrabId | null; time: number } {
   let grab: GrabId | null = null, best = 0;
   for (const [g, t] of Object.entries(sp.grabTimes) as [GrabId, number][]) if (t > best) { best = t; grab = g; }
   return best >= SPIN.GRAB_MIN ? { grab, time: best } : { grab: null, time: best };
+}
+
+/**
+ * Off-axis plan at the pop (docs/research 17). Flies a copy of the spin in the reference pose (grab
+ * from 0.25 s to 70 % of the flight, then open) to predict the degrees D and how much flip one unit of
+ * L_f gives by FLIP_CLOSE of the flight; then L_f makes a·(nMax + ½) flips there. Deterministic.
+ */
+function planOffAxis(sp: SpinState, a: number, T: number): void {
+  const ref: SpinState = { ...sp, tiltType: 'flat', Lf: 0, grabTimes: {} };
+  const tClose = SPIN.FLIP_CLOSE * T;
+  let g = 0;
+  for (let t = 0; t < T; t += STEP) {
+    stepSpin(ref, { grab: t >= 0.25 && t < 0.7 * T ? 'indy' : null, held: false, bar: 0 }, 9.81 * (T / 2 - t), STEP);
+    if (ref.airT <= tClose) g += (rampIn(ref.airT) / poseInertia(ref).flip) * STEP;
+  }
+  const D = Math.round(Math.abs(ref.phi) / 180) * 180;
+  sp.nMax = Math.max(0, Math.floor((D - 180) / 360));
+  if (sp.nMax === 0) {
+    sp.dipPeak = SPIN.DIP_MIN + (SPIN.DIP_MAX - SPIN.DIP_MIN) * a;
+    sp.dipT = tClose;
+    return;
+  }
+  sp.Lf = Math.min((360 * a * (sp.nMax + 0.5)) / Math.max(g, 1e-6), SPIN.FLIP_CAP * SPIN.IF_NEUTRAL);
 }

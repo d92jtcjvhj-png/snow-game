@@ -1,0 +1,79 @@
+# Off-axis tricks (cork / rodeo / misty): timing, axis tilt, and how games model them
+
+Network note: full-text fetches failed in this session (mdpi.com, library.kab.ac.ug, twinfinite.net and redbull.com did not resolve, so they are outside the session's allowed hosts). Everything below comes from search-result snippets and abstracts. The Jiang et al. 2025 tables (Applied Sciences 15(12):6618) could NOT be read, so no numbers from that paper are reported.
+
+## 1. Measured axis tilt, its evolution, inversion timing and angular velocities
+
+### Takeaway
+I found no published number in degrees for the axis tilt of a snowboard or freeski cork (single, double or triple). None of the sources gives a takeoff → max → landing tilt profile or the timing of each inversion within the air time either. What does exist: (a) corks are measurably "shortcut" rotations, about 25° short of their nominal degrees, while flatspins overshoot by about 21°; (b) rotation amount is driven by angular velocity, takeoff speed and moment of inertia; (c) a few coarse whole-trick rates, such as about 1.7 rev/s over 2.9 s of air for the first quad cork 1800. Aerials research gives tilt numbers, but for twisting somersaults rather than corks, and they are small (4–8°).
+
+### Cited Findings
+- Jiang et al. 2025, Applied Sciences 15(12):6618. Eleven athletes from the Chinese national snowboard team, backside 720/1080/1440/1800, 3D motion capture on a dry slope with airbag landing. Metrics mostly rose with difficulty: riders handle harder rotations by increasing moment of inertia, propulsion and joint motion at takeoff. The scope is the takeoff phase only, and I could not retrieve the numbers — [MDPI](https://www.mdpi.com/2076-3417/15/12/6618)
+- Merz et al. 2024, *Sports Biomechanics*, "Is a cork a legal shortcut?" (DOI 10.1080/14763141.2024.2399255), compared measured with nominal rotation. Median deviation: flatspins +21°, corks −25°, flips −28°. Authors' conclusion: "riders perform corks and flips with a shortcut and flatspins with a detour" — [lida.sport-iat.de record](https://lida.sport-iat.de/svd/Record/4089594?lng=de)
+- Merz et al. 2025, *J. Sports Sciences*, "Go big or spin fast?", motion tracking of 157 corks by 15 riders on a trampoline. "Regardless of the discipline and direction of rotation, angular velocity, take-off velocity and the moment of inertia are key performance indicators to increase the amount of rotation." The abstract gives no coefficients — [lida.sport-iat.de record](https://lida.sport-iat.de/svd/Record/4092443?lng=en); [sponet](https://sponet.de/Record/4092443)
+- Cork720 freeski study (J. Ski Sciences 15(1):93–100, 2018). The tilted axis came from backward tilt of the body plus extension of the right knee and hip at takeoff. Side tilt was "almost the same" as in the upright 720, contrary to expectation — [J-STAGE](https://doi.org/10.14845/jskisciences.15.1_93) (via search snippet)
+- Aerials (Yeadon). In simulation, a tilt angle of 8° gives 2.2 twists per somersault. With ski equipment, a 180° asymmetric arm movement produces only about 4° of tilt (8° without equipment), because the frontal moment of inertia is larger. Other results: 4–6 twists are possible in three somersaults; on Calgary 1988 film, some athletes started the twist at takeoff, some in the air, some both; model error was about 7° in tilt — [Loughborough repository](https://repository.lboro.ac.uk/articles/journal_contribution/The_limits_of_aerial_twisting_techniques_in_the_aerials_event_of_freestyle_skiing/9624755); [Yeadon 2013 pdf](https://dspace.lboro.ac.uk/dspace-jspui/bitstream/2134/12037/4/yeadon2013a.pdf); [Twisting techniques used in freestyle aerial skiing](https://repository.lboro.ac.uk/articles/journal_contribution/Twisting_techniques_used_in_freestyle_aerial_skiing/9617171)
+- Billy Morgan's first quad cork 1800 (WIRED analysis by physicist J. E. Goff, read via mirror): 2.9 s of air time, 133 ft (about 40 m) over the snow, average 1.7 rev/s over the five rotations. The trick needs a simultaneous trunk twist plus abdominal crunch, and the arms are thrown out near the end to slow rotation. These are second-hand mirror numbers — [WIRED mirror](https://wirednews.pages.dev/story/the-physics-of-one-of-the-craziest-big-air-snowboard-tricks-ever); [Unofficial Networks](https://unofficialnetworks.com/2018/02/07/wired-magazine-asks-physicist-to-disect-the-physics-of-quad-cork-1800/)
+- Halfpipe IMU work (Harding et al. 2008). Tri-axial rate gyroscopes on the body classified 180/360/540/720 rotation groups by integrating angular rate (n = 216, P < 0.001). Air time and degree of rotation are the two key objective performance variables. No angular-rate values appear in the snippet — [Griffith repository](https://research-repository.griffith.edu.au/items/7dbe0697-cb9f-58fb-9272-5c9a8213f63d)
+- Groh et al. used gyroscopes with a ±2000 °/s range for freestyle snowboard trick classification. This is a sensor range, not measured peaks — [Groh15 ITC pdf](https://www5.informatik.uni-erlangen.de/Forschung/Publikationen/2015/Groh15-ITC.pdf)
+- The angular momentum direction set at the lip decides whether a trick is a flat spin, a flip or a cork. Riders set it with torque against the snow, and pulling the limbs in raises ω because L = Iω — [Scientific American](https://www.scientificamerican.com/article/olympic-big-air-snowboarders-use-physics-to-their-advantage/)
+- Coaching: to go from cork 7 to 9, "spin a little bit faster and flip a little bit slower", and "make your corks less flippy". A cork is "an off axis spin that is leaned back". On a low cork the rider does not go fully inverted — [Newschoolers forum: Cork 9 tips](https://newschoolers.com/forum/thread/779076/Cork-9-tips--little-K--action-for-help); [Newschoolers: Help with terms](https://newschoolers.com/forum/thread/205012/Help-with-terms)
+
+### Inferences
+- Rough rates from the Morgan figures, assuming about 2.5 s of effective rotation time within 2.9 s of air: spin component about 1800°/2.5 s ≈ 700°/s (the 1.7 rev/s average ≈ 610°/s over the full air time), flip component about 4 × 360°/2.5 s ≈ 580°/s. For a double cork 1080 at a similar air time (about 2.5–3 s), the estimate is spin ≈ 400–450°/s and flip ≈ 250–300°/s. These are my estimates from the cited air time, not measurements.
+- Geometry: if a body rotated about one fixed axis tilted θ from vertical, its long axis would sweep a cone and reach at most 2θ from vertical. It would go past horizontal (inverted) only when θ > 45°, and it would invert once per revolution. A double cork 1080 has 3 spin revolutions but 2 inversions, so a cork is not a rotation about one fixed tilted axis. It is better modelled as a twisting somersault: a flip component (count = inversions) plus a twist/spin component (sets the named degrees). This matches the aerials literature. Merz's −25° "shortcut" fits too: the named degrees are counted loosely when the axis is tilted.
+- Yeadon's small tilt angles (4–8°) are tilts of the twist axis away from the angular momentum vector in a somersault frame. They are not the "visual tilt from vertical" that commentators mean, so they should not be copied into a game as the cork tilt.
+- The Cork720 study suggests the off-axis component comes mainly from leaning back (a backflip-like component) and leg extension at takeoff, not from side lean.
+
+### Gaps
+- No degree values for single/double/triple cork axis tilt from vertical were found in any source.
+- No measured timing of first and second inversions within the air time, and no tilt evolution profile, was found. Frame-by-frame broadcast breakdowns with numbers did not appear in search results.
+- The Jiang 2025 numbers (angular velocity, takeoff velocity, inertia per trick) and the Merz trampoline coefficients are behind blocked hosts or paywalls.
+- No measured peak spin/flip angular velocities for corks were found. The only rates are whole-trick averages from a journalistic source.
+
+## 2. Do inversions scale with spin degrees, or are they chosen separately?
+
+### Takeaway
+They are independent quantities. The trick name's number counts spin degrees, and "double/triple" counts off-axis inversions, so a double cork 1080 and a double cork 1440 both have two inversions. Riders add spin by twisting faster and keep the flip count fixed by "flipping slower".
+
+### Cited Findings
+- FIS definition: a "doublecork is corked and the athlete goes off-axis two separate times in the same trick". 1080 = 3.0 rotations and 1440 = 4.0 rotations — [FIS snowboard tricks list](https://www.fis-ski.com/DB/snowboard/park-and-pipe/tricks-list.html); [FIS freeski tricks list](https://www.fis-ski.com/DB/freestyle-freeski/freeski/trick-list.html)
+- NBC: a triple cork 1440 = "three off-axis inverts and four rotations (equalling 1440 degrees)" — [NBC explainer](https://www.nbcsportsbayarea.com/news/sports/beijing-winter-olympics/triple-cork-1080-chicken-salad-snowboarding-terms-explained/)
+- A cork is "one distinct off-axis or inverted horizontal rotation", and the rider is "never directly vertical or horizontal" — [snowboardingdays](https://www.snowboardingdays.com/?p=7738)
+- Coaching: cork 7 → cork 9 means "spin a little bit faster and flip a little bit slower" — [Newschoolers](https://newschoolers.com/forum/thread/779076/Cork-9-tips--little-K--action-for-help)
+- Red Bull: a double cork has "two off-axis flips" — [Red Bull slopestyle freeskiing guide](https://www.redbull.com/us-en/slopestyle-freeskiing-guide) (via snippet)
+
+### Inferences
+- For a fixed air time T: flip rate ≈ N_inv × 360° / T, and spin rate ≈ S / T. A rider controls the two separately through the direction of angular momentum at the lip (how far it is tilted back) and its magnitude/twist. A higher spin count with the same inversions means a more "flat" cork (a lower ratio of flip to spin rate). Example: a double cork 1440 has a flip:spin ratio of 720:1440 = 0.5, against 720:1080 ≈ 0.67 for a 1080. The ratio ω_flip/ω_spin ≈ N_inv × 360 / S is a reasonable game parameter, and the visual tilt follows from it, roughly atan(ω_flip/ω_spin): about 34° for the dc1080, 27° for the dc1440 and 37° for the tc1440. This is my geometric estimate, not a measured value.
+
+### Gaps
+- No source measures how flip rate or visual tilt changes between dc1080 and dc1440 for the same rider.
+
+## 3. How games model off-axis spins and inversions, and what feels right
+
+### Takeaway
+Most games build corks by combining a spin input (stick left/right, hold to add degrees) with a flip input (stick up/down), sometimes plus a modifier, rather than rotating about a true tilted axis. Players and reviewers complain when the two inputs blend by accident: in Steep, a wanted flat spin turns into an unwanted cork. Reviewers also complain when stick-flick systems feel random (SSX 2012, Shredders). I found no documented game that sets inversions and spin degrees as separate continuous physics quantities.
+
+### Cited Findings
+- **Steep (Ubisoft 2016).** Left stick left/right = spin, and holding longer gives more spin. Left stick forward/back = flips/barrel rolls. During a spin, flip or grab, right stick left/right shifts the body 90° — [Twinfinite basic tricks](https://twinfinite.net/guides/steep-how-to-do-basic-tricks/); [Twinfinite advanced](https://twinfinite.net/guides/steep-how-to-do-advanced-tricks/) (snippets only). A player complaint: wanting "to just do a flat spin and it either starts doing a crazy corked trick or an incredibly slow 180" — [Steam discussion](https://steamcommunity.com/app/460920/discussions/0/135513549097740424)
+- **Riders Republic (Ubisoft 2021).** Tricks combine stick directions with left/right shoulder "trick buttons" (WASD/IJKL on PC). One guide lists the cork as a diagonal sequence (e.g. "Left > Up") with the left stick plus triggers. It also has a "rodeo/cork training" mode and advises starting the trick earlier on flat ramps — [GameSkinny](https://www.gameskinny.com/jgcrs/riders-republic-all-tricks-list-how-to-do-tricks); [ProGameGuides](https://progameguides.com/riders-republic/how-to-complete-rodeo-cork-training-get-perfect-tricks-in-riders-republic/); [Reddit controls guide mirror](https://reddit.rtrace.io/r/RidersRepublic/comments/pa5zfv/more_intuitive_control_settings_guide/)
+- **SNOW (Poppermost).** Advanced players "combine different spin, flips, and rolls to perform 'off-axis' tricks like corks and rodeos" — [Red Bull SNOW guide](https://www.redbull.com/ca-en/snow-ps4-beta-release-tutorial-guide) (snippet)
+- **Shaun White Snowboarding (2008).** In the air, the left stick tilts the rider "to spin vertically and horizontally", and the right stick does grabs. The Wii version uses body weight shift. Reviews were mixed: "shoddy" controls, but also "straightforward and even a tad innovative" though needing practice — [GameSpot review](https://www.gamespot.com/reviews/shaun-white-snowboarding-review/1900-6202546/); [bit-tech](https://bit-tech.net/reviews/gaming/xbox/shaun-white-snowboarding/2/); [GamesRadar](https://www.gamesradar.com/shaun-white-snowboarding-review/)
+- **SSX (2012).** The right stick does jumps/tricks (Skate-like flick system) and RT tweaks. Reviews split: "exceptionally intuitive" against "makes the tricks feel random" / "never felt completely in control" — [Destructoid](https://destructoid.com/reviews/review-ssx); [PopMatters](https://popmatters.com/review/155657-ssx); [VideoGamer](https://www.videogamer.com/reviews/ssx-review)
+- **Shredders (2022).** Many tricks are on the joysticks. Reviews call the controls "cumbersome and unreliable" or say they sometimes fail on previously working tricks, while others praise fluid carving. Kotaku notes "more cork 720s" — [Windows Central](https://windowscentral.com/shredders-xbox-review); [NME](https://www.nme.com/reviews/shredders-review-3185454); [GameGrin](https://www.gamegrin.com/reviews/shredders-review/)
+- **Skate (EA).** Its "flick-it" stick-gesture philosophy is the reference that SSX 2012 explicitly borrowed — [EA Skate "get control"](https://www.ea.com/games/skate/skate/news/get-control)
+- **Grand Mountain Adventure 2, Snowboard Kids.** I found no source describing cork/off-axis mechanics. Only generic control pages turned up — [Snowboard Kids 2 controls](https://strategywiki.org/wiki/Snowboard_Kids_2/Controls); [Gamezebo GMA guide](https://www.gamezebo.com/walkthroughs/grand-mountain-adventure-beginners-guide-tips-cheats-and-strategies/)
+
+### Inferences
+- The common pattern is that spin degrees come from how long the spin input is held and inversions come from a separate flip input. The cork emerges when both are active. This matches real naming (inversions and degrees are independent), but the Steep complaint shows why a dead zone or explicit intent matters: an accidental diagonal should not produce a cork.
+- For a game where the player does not steer (this project), a believable mapping is:
+  - spin charge → |L| and so the degrees, through T_air;
+  - the off-axis input (stick) → the number of inversions N (0, 1, 2, 3), quantised or with snapping;
+  - the flip rate is derived as ω_flip = N × 2π / T_rot and the spin as ω_spin = S / T_rot.
+
+  The visual tilt then emerges (about 25–40° for doubles and triples, by the estimate in section 2) rather than being a preset. This mirrors the coaching rule "more spin with the same corks = spin faster, flip slower".
+- The Merz "shortcut" result (corks about 25° short) gives some justification for a small landing tolerance on corks in the yaw check.
+
+### Gaps
+- No primary documentation, developer talk or GDC talk on how SSX, Steep, Riders Republic, Shredders or GMA2 internally compute off-axis rotation (tilted axis vs. composed Euler rotations) was found.
+- No reviewer or player discussion was found that specifically assesses whether in-game corks "look right" compared with the real ones.
