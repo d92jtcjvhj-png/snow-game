@@ -68,7 +68,7 @@ describe('a whole jump (Phase 3)', () => {
     jump(0.45, 9);
     expect(run.landing!.quality).toBe('crash');
     expect(run.board.speed()).toBeLessThan(3);
-    jump(0.35, 0.7);
+    jump(0.35, 0.6);
     expect(['perfect', 'clean']).toContain(run.landing!.quality);
     expect(run.board.speed()).toBeGreaterThan(15);
   });

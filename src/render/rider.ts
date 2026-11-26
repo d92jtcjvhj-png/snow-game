@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { flat } from './materials';
+import type { GrabId } from '../physics/spin';
 
 /** Pose for one frame (all smoothed by the rider itself). */
 export interface RiderPose {
@@ -14,8 +15,10 @@ export interface RiderPose {
   airborne: boolean;
   /** opened up in the air (arms out) */
   opened?: boolean;
-  /** grab held in the air */
-  grab?: 'nose' | 'mute' | 'indy' | 'tail' | null;
+  /** grab shape in the air (the hand goes there as the tuck closes) */
+  grab?: GrabId | null;
+  /** 0..1 tuck from the physics spring (docs/research 15): the body closes as the spin speeds up */
+  tuck?: number;
   /** fallen: the rider tumbles over, in the direction of the cause */
   crash?: boolean;
   crashDir?: 'nose' | 'toe' | 'back' | 'side';
@@ -24,8 +27,8 @@ export interface RiderPose {
 }
 
 /** where each grab's hand goes, in the board frame (x = heel side, y = up, z = nose) */
-const GRAB_POINT: Record<NonNullable<RiderPose['grab']>, [number, number, number]> = {
-  nose: [0, 0.06, 0.6], mute: [-0.13, 0.04, 0.16], indy: [-0.13, 0.04, -0.06], tail: [0, 0.06, -0.6],
+const GRAB_POINT: Partial<Record<GrabId, [number, number, number]>> = {
+  nose: [0, 0.06, 0.6], mute: [-0.13, 0.04, 0.16], indy: [-0.13, 0.04, -0.12], tail: [0, 0.06, -0.6],
 };
 /** shoulder to the middle of the hand (m, before the 1.25 scale) */
 const ARM_LEN = 0.53;
@@ -95,7 +98,7 @@ export class Rider {
     this.cr += (crouch - this.cr) * Math.min(1, dt * (crouch < this.cr ? 14 : 20));
     const c = this.cr;
     const grab = p.airborne && !p.crash ? p.grab ?? null : null;
-    this.gr += ((grab ? 1 : 0) - this.gr) * Math.min(1, dt * 14);
+    this.gr = grab ? p.tuck ?? 1 : this.gr + (0 - this.gr) * Math.min(1, dt * 14);
     const g = this.gr;
     // grab: knees pulled up (shorter legs) and the torso folded forward over the toe edge
     const legK = 1 - 0.36 * c - 0.16 * g;
@@ -119,7 +122,7 @@ export class Rider {
     this.armF.rotation.z += (fz - this.armF.rotation.z) * k; this.armR.rotation.z += (rz - this.armR.rotation.z) * k;
     // the grabbing hand reaches the board: aim the arm at the grab point (board frame) and stretch it a bit
     // if it falls short (cartoon). Nose/Mute = front hand, Indy/Tail = rear hand; Mute/Indy on the toe edge (−x).
-    const reach = grab ? GRAB_POINT[grab] : null;
+    const reach = grab ? GRAB_POINT[grab] ?? GRAB_POINT.indy! : null;
     const armG = grab === 'nose' || grab === 'mute' ? this.armF : this.armR;
     for (const a of [this.armF, this.armR]) if (a !== armG || !reach) a.scale.y += (1 - a.scale.y) * k;
     if (reach && g > 0.05) {

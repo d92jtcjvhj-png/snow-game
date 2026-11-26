@@ -94,20 +94,23 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
   - aiuto della curva alla rotazione.
 - ✅ **Rotazioni in aria** (ricerca `docs/research/12`, legacy `SIM`):
   - momento angolare fissato al pop dalla carica (potenza e verso), dal pop e dall'aiuto della curva (fino a +10%); in aria ω = L / I(posa);
-  - inerzia: raccolto (grab) 2,0, neutro 2,5, aperto 3,5 kg·m² → raccolto ≈ 950°/s a piena carica; nessun tetto fisso (su questo salto ~1800 è il massimo pulito);
+  - **inerzia separata per asse** (ricerca 15): spin neutro 2,5 kg·m² (Indy/Mute ×0,80, aperto ×1,4: la tavola è un carico fisso che nessun grab toglie); ribaltamento neutro 8,5 kg·m² (Indy/Mute ×0,60, aperto ×1,53: raccogliendosi la tavola va vicino alle anche) → il grab accelera il ribaltamento più dello spin (stringe il cork), aprirsi lo rallenta di più (raddrizza l'asse); raccolto ≈ 950°/s di spin a piena carica; nessun tetto fisso (su questo salto ~1800 è il massimo pulito);
+  - **raccolto e apertura graduali**: due molle critiche deterministiche (raccolto 90% in ≈0,26 s, apertura ≈0,22 s); la rotazione accelera mentre il corpo si chiude e l'animazione legge lo stesso valore; il grab conta (tempo e nome) solo quando la mano è sulla tavola (raccolto ≥ 70%), quindi un tocco da 0,1 s non vale;
   - la rotazione parte in 0,28 s (spalle prima, tavola dopo);
   - **due potenze** (come in una modalità classificata, conta il giocatore):
     - **carica** (pollice sinistro) = spinta di spin, cioè quanti gradi;
     - **spinta fuori asse** (levetta a destra, in %, con tacche e vibrazione ogni 25%; la **percentuale grande sopra la levetta** e una barra gialla lungo la guida mostrano la spinta, anche con la tastiera) = quanto velocemente ti ribalti: poca = un ribaltamento lento (es. Cork 1260/1800), media = double, tanta = triple (quad con grab lungo);
     - su = cork, giù = misty (FS) o rodeo (BS); senza carica su/giù = frontflip/backflip (la levetta ne dà la velocità);
     - la levetta vale per **tutta la carica** e ricorda la spinta più forte raggiunta (lasciarla non la azzera); con la tastiera ↑/↓ tenuti la fanno salire come la carica;
-  - **un'unica rotazione fluida**: il ribaltamento parte al pop insieme allo spin, con la stessa rampa (l'asse inclinato si fissa allo stacco, ricerca 12); ω_f = L_f / I(posa), quindi anche il ribaltamento accelera col grab e rallenta aprendosi; spinta ritarata (650 → 520 °/s) per tenere gli stessi ribaltamenti di prima;
+  - **un'unica rotazione fluida**: il ribaltamento parte al pop insieme allo spin, con la stessa rampa (l'asse inclinato si fissa allo stacco, ricerca 12); ω_f = L_f / I_flip(posa); spinta ritarata (390 °/s in posa neutra ≈ 650 °/s col grab, minimo 42%) per tenere col grab gli stessi ribaltamenti di prima: senza grab il cork gira piano;
   - **chiudere il ribaltamento**: aperto e a meno di 25° da un ribaltamento intero, il rider "cerca l'atterraggio" e lo chiude; se apri troppo presto non arrivi al giro intero e atterri inclinato o capovolto, se tieni il grab troppo a lungo ne fai uno di troppo;
   - nel nome i ribaltamenti sono al massimo giri − 1, come nei trick dei pro (es. Quint Cork 2160);
   - inversioni contate quando la testa va sotto i piedi;
   - **controrotazione** (pollice in aria dal lato opposto): frena e "parcheggia" fino a 180° nel busto, poi li restituisce ("Stalled" se tenuta a lungo); dallo stesso lato spinge +15%;
   - **shifty** senza rotazione: solo la tavola, rotazione netta zero.
-- ✅ **Grab**: Nose, Mute, Indy, Tail (bottoni in aria o Q/W/E/R). Tenuto = raccolto e più veloce; lasciato = aperto, più lento e asse che si raddrizza; all'apice senza grab ti apri da solo. Conta se tenuto ≥ 0,15 s; vince il più lungo.
+- ✅ **Grab**: Nose, Mute, Indy, Tail (bottoni in aria o Q/W/E/R). Tenuto = raccolto e più veloce; lasciato = aperto, più lento e asse che si raddrizza; all'apice senza grab ti apri da solo. Conta se tenuto ≥ 0,15 s con la mano sulla tavola; vince il più lungo.
+  - ✅ **effetto per grab** (tabella `GRAB_K`, ricerca 15): Indy/Mute i più raccolti fra i quattro (spin ×0,80, ribaltamento ×0,60), Nose/Tail un po' meno (×0,88 / ×0,75).
+  - ⚠️ tabella già pronta per i grab futuri (Truck Driver, Japan, Melon, Stalefish, Method, Crail, Stiffy, Tindy, ecc.), con i fattori su spin e ribaltamento; i bottoni per sceglierli non ci sono ancora.
   - ⚠️ **il rider prende la tavola** (versione base): ginocchia su, busto piegato sulla tavola, la mano va al punto del grab (Nose = mano davanti sulla punta, Mute = mano davanti sulla lamina di punta, Indy = mano dietro sulla lamina di punta, Tail = mano dietro sulla coda); il braccio si allunga un po' se non arriva. Niente tweak né animazione dettagliata, tutti i livelli di qualità.
 - ✅ **Nome del trick**: Frontside / Backside / Cab / Switch Backside + Double/Triple/Quad/Quint + Cork/Misty/Rodeo + gradi a multipli di 180 + grab; Frontflip/Backflip; Straight air, Shifty, Stalled.
 - ✅ **Atterraggio realistico** (ricerche 12 e 13): fasce (la peggiore decide, tolleranza ×1,7 su tutte) + fisica dopo il contatto:

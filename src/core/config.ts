@@ -135,14 +135,26 @@ export const START_Z = 22;
  * ω = L / I(pose). Tuck (grab) spins faster, opening up slows down and levels the cork axis.
  */
 export const SPIN = {
-  /** moment of inertia about the spin axis, rider + board (kg·m²): tucked / neutral / open */
-  I_TUCK: 2.0,
+  /**
+   * Moment of inertia, rider + board (kg·m²), neutral pose, about the spin axis and the flip axis
+   * (docs/research 15). Only ratios matter for ω: the pose multiplies them by k (GRAB_K, K_OPEN_*).
+   * Spin: the board is a fixed load no grab removes → open/tuck ≈ 1.75. Flip: tucking brings the
+   * board close to the hips → open/tuck ≈ 2.9.
+   */
   I_NEUTRAL: 2.5,
-  I_OPEN: 3.5,
+  IF_NEUTRAL: 8.5,
+  /** opened up (arms out, legs long): k on each axis (3.5/2.5 spin, 13/8.5 flip) */
+  K_OPEN_SPIN: 1.4,
+  K_OPEN_FLIP: 1.53,
+  /** pose changes take time (docs/research 15): critically damped springs, ω_n (rad/s). Tuck 90 % in ≈0.26 s, opening ≈0.22 s */
+  TUCK_WN: 15,
+  OPEN_WN: 18,
+  /** the grab counts (time, name) only with the hand really on the board */
+  TUCK_GRAB: 0.7,
   /** spin rate at 100 % charge in the neutral pose (°/s): ≈ 950 °/s tucked (2340 in ~2.5 s) */
   OMEGA_MAX: 760,
-  /** straight flips at full stick, neutral pose (°/s), legacy FLIP_MAX */
-  FLIP_MAX: 320,
+  /** straight flips at full stick, neutral pose (°/s): ≈ 400 °/s with Indy/Mute, like before research 15 */
+  FLIP_MAX: 240,
   /** the spin builds up over the first moments (shoulders lead, board follows), legacy */
   RAMP_IN: 0.28,
   /**
@@ -150,9 +162,9 @@ export const SPIN = {
    * pose (°/s), on top of the spin. Little push = slow flipping (e.g. cork 1800 with one inversion),
    * a lot = faster flipping (double, triple…). Same idea as the spin charge.
    */
-  OFF_MAX: 520,
+  OFF_MAX: 390,
   /** the weakest push still flips once over a whole flight: L_f ∝ OFF_MIN + (1 − OFF_MIN)·push */
-  OFF_MIN: 0.35,
+  OFF_MIN: 0.42,
   /** spotting: once opened, if the flip is within this many degrees of a whole flip the rider closes it */
   SPOT_WINDOW: 25,
   /** ...at this rate at least (°/s), legacy LEVEL_RATE */
@@ -163,6 +175,40 @@ export const SPIN = {
   PARK_RET: 300,
   /** a grab counts if held at least this long (s) */
   GRAB_MIN: 0.15,
+} as const;
+
+/**
+ * Every grab's effect on the moment of inertia (docs/research 15, catalogue table; ESTIMATES):
+ * I_spin = I_NEUTRAL·spin, I_flip = IF_NEUTRAL·flip. Compact grabs speed both rotations up, nose/tail
+ * and cross-body grabs the spin more than the flip, straight-leg grabs (method, stiffy, pokes) slow
+ * the flip down. New grabs only need a row here.
+ */
+export const GRAB_K = {
+  truckdriver: { spin: 0.78, flip: 0.55 },
+  indy: { spin: 0.8, flip: 0.6 },
+  mute: { spin: 0.8, flip: 0.6 },
+  japan: { spin: 0.82, flip: 0.55 },
+  melon: { spin: 0.83, flip: 0.65 },
+  taipan: { spin: 0.85, flip: 0.65 },
+  roastbeef: { spin: 0.85, flip: 0.7 },
+  chickensalad: { spin: 0.85, flip: 0.75 },
+  stalefish: { spin: 0.85, flip: 0.7 },
+  nose: { spin: 0.88, flip: 0.75 },
+  tail: { spin: 0.88, flip: 0.75 },
+  seatbelt: { spin: 0.88, flip: 0.75 },
+  nuclear: { spin: 0.88, flip: 0.75 },
+  tindy: { spin: 0.88, flip: 0.75 },
+  tailfish: { spin: 0.88, flip: 0.75 },
+  rocket: { spin: 0.9, flip: 0.8 },
+  bloodydracula: { spin: 0.9, flip: 0.85 },
+  crail: { spin: 0.92, flip: 0.85 },
+  canadianbacon: { spin: 0.95, flip: 0.9 },
+  tweak: { spin: 0.95, flip: 0.95 },
+  poke: { spin: 0.95, flip: 1.1 },
+  method: { spin: 1.02, flip: 1.1 },
+  slob: { spin: 1.0, flip: 1.05 },
+  lien: { spin: 1.0, flip: 1.05 },
+  stiffy: { spin: 1.0, flip: 1.25 },
 } as const;
 
 /**

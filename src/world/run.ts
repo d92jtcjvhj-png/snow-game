@@ -3,8 +3,7 @@ import { APPROACH, DEG, LANDING, POP, SNOW, SOFT_SNOW, START_Z, STEP, TAKEOFF_ED
 import { Approach, type ApproachPhase } from '../physics/approach';
 import { Board } from '../physics/board';
 import { evaluateLanding, type LandingCause, type LandingOutcome, type LandingQuality } from '../physics/landing';
-import { airQuat, initSpin, stepSpin, type GrabId, type SpinState } from '../physics/spin';
-import { SPIN } from '../core/config';
+import { airQuat, initSpin, poseInertia, stepSpin, type GrabId, type SpinState } from '../physics/spin';
 import { qAxis, qMul, qRot, type Q4 } from '../physics/vec';
 import { dragK } from '../physics/snow';
 import { len, v3, type V3 } from '../physics/vec';
@@ -317,7 +316,7 @@ export class Run {
     const grabHeld = !!sp.curGrab;
     // residual rotation, signed around the vertical (spin) and the off-axis flip still going
     const resYaw = sp.mode === 'spin' ? sp.dir * sp.omega : 0;
-    const resFlip = sp.tiltType !== 'flat' && !sp.flipDone ? Math.abs(sp.Lf / (grabHeld ? SPIN.I_TUCK : sp.opened ? SPIN.I_OPEN : SPIN.I_NEUTRAL)) : 0;
+    const resFlip = sp.tiltType !== 'flat' && !sp.flipDone ? Math.abs(sp.Lf / poseInertia(sp).flip) : 0;
     const ev = evaluateLanding({
       boardFwd: fwd, boardLat: lat, bodyUp: up, velocity: v, normal: b.normal, efh,
       residualOmega: resYaw, residualFlip: resFlip, dKnuckle: dK, inLanding: inL, grabHeld, tolerance: this.tolerance,

@@ -91,12 +91,14 @@ async function main() {
     else if (air && sp.mode === 'none') twist = -sp.shifty * 0.6 * DEG;
     rider.update({
       edge: b.grounded ? b.edge : 0,
-      crouch: air ? (sp.grabbing ? 1 : sp.opened ? 0 : 0.6) : charging ? 0.7 : Math.min(0.6, inp.brake),
+      // in the air the pose comes from the physics springs (same values that set the inertia)
+      crouch: air ? Math.max(0, 0.6 + 0.4 * sp.tuck - 0.6 * sp.open * (1 - sp.tuck)) : charging ? 0.7 : Math.min(0.6, inp.brake),
       twist,
       arms: charging ? Math.abs(inp.charge) : 0,
       airborne: !!air,
-      opened: !!air && sp.opened && !sp.grabbing,
-      grab: air ? sp.curGrab : null,
+      opened: !!air && sp.open > 0.5 && sp.tuck < 0.5,
+      grab: air && sp.grabbing ? sp.shape : null,
+      tuck: air ? sp.tuck : 0,
       crash: run.phase === 'crash' || (run.phase === 'done' && run.landing?.quality === 'crash'),
       crashDir: crashDir(run.landing?.cause),
       absorb: run.landing && run.phase !== 'air' ? Math.min(1, run.landing.efh / 2.5) * Math.max(0, 1 - run.sinceLanding() / 0.3) : 0,
