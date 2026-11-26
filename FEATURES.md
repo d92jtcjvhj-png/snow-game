@@ -141,8 +141,15 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
 - ✅ **Tastiera**: Z/X carica (sinistra/destra) e in aria controrotazione, Spazio carica dritta, B speed check, ↑/↓ asse, Q/W/E/R grab, R riprova, Invio = Gioca.
 
 ## A7. Grafica
-- ✅ Stile low-poly cartoon: flat shading, palette del legacy, abeti e montagne con seed fisso, nebbia.
-- ✅ **Rider articolato** (ricerca 14), costruito in codice, low-poly con flat shading: proporzioni reali (H 1,76 m, Drillis & Contini), pantaloni e giacca larghi, casco rosso e maschera, scarponi e highback su attacchi a papera +15/−15, tavola gialla (nose) e viola (tail), petto bianco sul lato punta. Cosce, stinchi, braccia e avambracci separati; ~20 mesh, tutti i livelli di qualità.
+- ✅ **Stile stilizzato-realistico** (ricerca 16, primo blocco): neve liscia con luce credibile; alberi e montagne restano un po' sfaccettati per carattere. Seed fisso.
+  - **Luce del mattino**: sole basso e caldo di tre quarti dal lato a valle (mai dietro la camera), cielo che riempie le ombre di azzurro, la neve che rimbalza luce chiara da sotto; tone mapping Neutral (il bianco non brucia), dithering (tutti i livelli).
+  - **Neve**: normali lisce calcolate dalla superficie h(x, z) (niente più sfaccettature), occlusione del cielo cotta nei colori (piedi del kicker e conche più scure e azzurre), albedo mai bianco puro (pista appena calda, neve fresca fuori pista più fredda, kicker azzurrino); luce che avvolge un po' oltre il terminatore (finto scattering) e grana fine (tutti i livelli); **segni del gatto** lungo la linea di massima pendenza con le giunte delle passate ogni 4 m e **scintillio** di grani al sole vicino alla camera (medium e high). Testato in Vitest.
+  - **Cielo** sfumato dal blu intenso allo zenit al chiaro dell'orizzonte, con disco e alone del sole; nebbia dello stesso colore dell'orizzonte; **tre anelli di montagne** lontane sempre più chiare nella foschia, con la neve sopra una linea frastagliata (tutti i livelli).
+  - **Ombre** anche in qualità media (1024), alta 2048; corretto il tipo di ombra (three r187 aveva tolto quello morbido).
+  - **Alberi e bandierine istanziati**: le chiamate di disegno scendono da ~435 a ~70 in qualità media (visibili nel riquadro fps); pini a due coni con verdi diversi.
+  - `?q=low|medium|high` nell'indirizzo blocca il livello di qualità (prove e confronti).
+  - ❌ Pini e rocce nuovi con neve sopra, particelle, tracce della tavola (terzo blocco); nebbia d'altezza; bloom.
+- ⚠️ **Rider articolato** (ricerca 14; la pelle unica morbida arriva nel secondo blocco), costruito in codice, low-poly con flat shading: proporzioni reali (H 1,76 m, Drillis & Contini), pantaloni e giacca larghi, casco rosso e maschera, scarponi e highback su attacchi a papera +15/−15, tavola gialla (nose) e viola (tail), petto bianco sul lato punta. Cosce, stinchi, braccia e avambracci separati; ~20 mesh, tutti i livelli di qualità.
   - **Piedi bloccati sugli attacchi e mani piazzate con IK a due ossa** (ginocchia verso le punte di ogni piede, gomiti in fuori).
   - **Pose chiave della ricerca** fuse dai dati della fisica e ammorbidite con molle critiche (tempi della Tab. 5): scivolata atletica (ginocchia ~33°), curva di tallone (seduto, braccio davanti alto) e di punta (ginocchia verso la neve, mani avanti basse), speed check (seduto, busto avanti, braccia avanti), carica (accosciata ~62° e spalle caricate contro il verso dello spin), distensione al labbro, posa compatta in aria, raccolto e apertura dalle molle fisiche, assorbimento, atterraggi sporchi, caduta protettiva.
   - Testa che guarda sopra la spalla anteriore e tiene lo sguardo a livello; piccolo movimento delle mani in scivolata.
@@ -153,7 +160,7 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
 - ✅ Bordi blu dell'atterraggio, bandierine, reti arancioni, cancello di partenza.
 - ✅ Camera laterale sul lato punta, un po' dietro, come nel legacy: si leggono bene lamina e inclinazione. **Inquadratura rigida**: stessa posizione rispetto al rider a terra e in volo, mira esattamente su di lui e lo segue quasi senza ritardo, così durante il salto l'inquadratura non oscilla. Resta sempre almeno 2 m sopra la neve.
 - ✅ **Qualità adattiva**:
-  - livelli low / medium / high: pixel ratio 1 / 1,5 / 2; ombre solo high; alberi 90 / 150 / 220; particelle 60 / 150 / 260;
+  - livelli low / medium / high: pixel ratio 1 / 1,5 / 2; ombre medium 1024 e high 2048; segni del gatto e scintillio da medium; alberi 90 / 150 / 220; particelle 60 / 150 / 260;
   - scende se il frame resta > 20 ms per 2 s, sale se resta < 12 ms per 5 s.
 - ❌ Tracce sulla neve, effetti in aria.
 

@@ -1,35 +1,35 @@
 import * as THREE from 'three';
 import { flat, PALETTE } from '../render/materials';
-import { BA, LM, baseY, halfWidth, heightAt, kickerAt } from './bigair';
+import { BA, LM, baseY, halfWidth, heightAt } from './bigair';
+import { bakeSnow } from './snowBake';
 import type { TerrainGrid } from './terrain';
 
-/**
- * Three.js side of the big air: terrain mesh (same grid as the collider), park markings, flags and nets,
- * start gate, low-poly trees and mountains. Seeded: always the same.
- */
-export function buildScene(scene: THREE.Scene, grid: TerrainGrid, treeCount: number): void {
-  scene.add(terrainMesh(grid));
-  markings(scene);
-  scenery(scene, treeCount);
+/** What the render loop needs back from the scene. */
+export interface SceneHandles {
+  /** trees: one instanced mesh per part; `setTreeCount` shows the first n (quality tier) */
+  setTreeCount(n: number): void;
 }
 
-function terrainMesh(grid: TerrainGrid): THREE.Mesh {
+/**
+ * Three.js side of the big air: terrain mesh (same grid as the collider) with the baked snow shading,
+ * park markings, flags and nets, start gate, trees. Repeated objects are instanced (docs/research 16:
+ * ~575 draw calls → a few dozen). Seeded: always the same.
+ */
+export function buildScene(scene: THREE.Scene, grid: TerrainGrid, snow: THREE.Material): SceneHandles {
+  scene.add(terrainMesh(grid, snow));
+  markings(scene);
+  return scenery(scene);
+}
+
+function terrainMesh(grid: TerrainGrid, snow: THREE.Material): THREE.Mesh {
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(grid.positions, 3));
   geo.setIndex(new THREE.BufferAttribute(grid.indices, 1));
-  const n = grid.positions.length / 3, col = new Float32Array(n * 3), c = new THREE.Color();
-  for (let i = 0; i < n; i++) {
-    const x = grid.positions[i * 3]!, z = grid.positions[i * 3 + 2]!, ax = Math.abs(x);
-    // per-vertex noise from the position (a row index would draw stripes)
-    const hsh = Math.sin(x * 12.9898 + z * 78.233) * 43758.5453, shade = 0.955 + 0.035 * (hsh - Math.floor(hsh));
-    if (kickerAt(x, z) > 0.02) c.setRGB(0.85 * shade, 0.92 * shade, 1.0 * shade); // the kicker: a touch of blue
-    else if (ax > halfWidth(z) + 0.3) c.setRGB(0.88 * shade, 0.92 * shade, 0.97 * shade); // soft snow outside
-    else c.setRGB(0.97 * shade, 0.98 * shade, 1.0 * shade); // groomed
-    col.set([c.r, c.g, c.b], i * 3);
-  }
-  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
-  geo.computeVertexNormals();
-  const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true }));
+  const bake = bakeSnow(grid);
+  geo.setAttribute('normal', new THREE.BufferAttribute(bake.normals, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(bake.colors, 3));
+  geo.setAttribute('groom', new THREE.BufferAttribute(bake.groom, 1));
+  const mesh = new THREE.Mesh(geo, snow);
   mesh.receiveShadow = true;
   return mesh;
 }
@@ -59,14 +59,22 @@ function markings(scene: THREE.Scene): void {
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
     scene.add(new THREE.Line(g, new THREE.LineBasicMaterial({ color: PALETTE.blue })));
   }
-  // flags along the jump and nets along the landing
-  const pole = flat(0x334455), flag = flat(0xe5532c), net = new THREE.MeshLambertMaterial({ color: 0xff6a2b, transparent: true, opacity: 0.55, side: THREE.DoubleSide });
-  const poleGeo = new THREE.CylinderGeometry(0.04, 0.04, 1.6, 5), flagGeo = new THREE.BoxGeometry(0.02, 0.35, 0.5);
+  // flags along the jump (instanced: two draw calls) and nets along the landing
+  const net = new THREE.MeshLambertMaterial({ color: 0xff6a2b, transparent: true, opacity: 0.55, side: THREE.DoubleSide });
+  const spots: [number, number, number][] = [];
   for (let z = BA.kickerBase - 20; z < LM.zOutEnd; z += 6) for (const s of [-1, 1]) {
-    const x = s * (halfWidth(z) + 1.2), y = heightAt(x, z);
-    const p = new THREE.Mesh(poleGeo, pole); p.position.set(x, y + 0.8, z); scene.add(p);
-    const f = new THREE.Mesh(flagGeo, flag); f.position.set(x, y + 1.4, z + 0.25); scene.add(f);
+    const x = s * (halfWidth(z) + 1.2);
+    spots.push([x, heightAt(x, z), z]);
   }
+  const poles = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.04, 0.04, 1.6, 6), flat(0x334455), spots.length);
+  const flags = new THREE.InstancedMesh(new THREE.BoxGeometry(0.02, 0.35, 0.5), flat(0xe5532c), spots.length);
+  const m = new THREE.Matrix4();
+  spots.forEach(([x, y, z], i) => {
+    poles.setMatrixAt(i, m.makeTranslation(x, y + 0.8, z));
+    flags.setMatrixAt(i, m.makeTranslation(x, y + 1.4, z + 0.25));
+  });
+  poles.castShadow = flags.castShadow = true;
+  scene.add(poles, flags);
   for (const s of [-1, 1]) {
     const pts: number[] = [], idx: number[] = [];
     let i = 0;
@@ -84,29 +92,30 @@ function markings(scene: THREE.Scene): void {
   const top = new THREE.Mesh(new THREE.BoxGeometry(10.6, 0.8, 0.3), flat(0xff6a2b)); top.position.set(0, y0 + 4, BA.zStart + 6); scene.add(top);
 }
 
-function scenery(scene: THREE.Scene, treeCount: number): void {
+const MAX_TREES = 220;
+
+function scenery(scene: THREE.Scene): SceneHandles {
   let seed = 7;
   const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  const leaves = [flat(PALETTE.pine), flat(PALETTE.pine2)], trunk = flat(PALETTE.trunk);
-  const coneGeo = new THREE.ConeGeometry(1, 1, 6), trunkGeo = new THREE.CylinderGeometry(0.15, 0.2, 1.2, 5);
-  for (let i = 0; i < treeCount; i++) {
+  // pines: two stacked cones and a trunk, instanced, with a per-tree green
+  const lower = new THREE.InstancedMesh(new THREE.ConeGeometry(1, 1, 7), new THREE.MeshLambertMaterial({ flatShading: true }), MAX_TREES);
+  const upper = new THREE.InstancedMesh(new THREE.ConeGeometry(1, 1, 7), new THREE.MeshLambertMaterial({ flatShading: true }), MAX_TREES);
+  const trunks = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.15, 0.2, 1.2, 5), flat(PALETTE.trunk), MAX_TREES);
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), v = new THREE.Vector3(), sc = new THREE.Vector3(), c = new THREE.Color();
+  const greens = [new THREE.Color(PALETTE.pine), new THREE.Color(PALETTE.pine2), new THREE.Color(0x2a5244)];
+  for (let i = 0; i < MAX_TREES; i++) {
     const side = rnd() < 0.5 ? -1 : 1, z = BA.zStart + rnd() * (LM.zEnd - BA.zStart);
-    const x = side * (halfWidth(z) + 6 + rnd() * 35), y = heightAt(x, z), h = 4 + rnd() * 6;
-    const cone = new THREE.Mesh(coneGeo, leaves[i % 2]); cone.scale.set(h * 0.3, h, h * 0.3); cone.position.set(x, y + h / 2 + 0.7, z); cone.castShadow = true;
-    const t = new THREE.Mesh(trunkGeo, trunk); t.position.set(x, y + 0.4, z);
-    scene.add(cone, t);
+    const x = side * (halfWidth(z) + 6 + rnd() * 35), y = heightAt(x, z), h = 4 + rnd() * 6, yaw = rnd() * 6.28;
+    q.setFromAxisAngle(v.set(0, 1, 0), yaw);
+    lower.setMatrixAt(i, m.compose(v.set(x, y + 0.7 + h * 0.32, z), q, sc.set(h * 0.32, h * 0.65, h * 0.32)));
+    upper.setMatrixAt(i, m.compose(v.set(x, y + 0.7 + h * 0.72, z), q, sc.set(h * 0.22, h * 0.55, h * 0.22)));
+    trunks.setMatrixAt(i, m.compose(v.set(x, y + 0.4, z), q, sc.set(1, 1, 1)));
+    c.copy(greens[i % 3]!).multiplyScalar(0.9 + 0.2 * rnd());
+    lower.setColorAt(i, c); upper.setColorAt(i, c.multiplyScalar(1.08));
   }
-  const rock = flat(PALETTE.rock), peak = flat(PALETTE.peak), mtnGeo = new THREE.ConeGeometry(1, 1, 5);
-  const yEnd = baseY(LM.zEnd);
-  for (let i = 0; i < 10; i++) {
-    const r = 60 + rnd() * 70, h = 70 + rnd() * 90, m = new THREE.Mesh(mtnGeo, i % 2 ? peak : rock);
-    m.scale.set(r, h, r); m.position.set(-300 + i * 65 + rnd() * 20, yEnd - 30 + h / 2, LM.zEnd + 140 + rnd() * 80); m.rotation.y = rnd() * 3;
-    scene.add(m);
-  }
-  for (let i = 0; i < 12; i++) {
-    const r = 50 + rnd() * 60, h = 60 + rnd() * 80, z = -40 + i * 30 + rnd() * 20, s = i % 2 ? 1 : -1;
-    const m = new THREE.Mesh(mtnGeo, i % 3 ? peak : rock);
-    m.scale.set(r, h, r); m.position.set(s * (150 + rnd() * 60), baseY(Math.min(z, LM.zEnd)) - 25 + h / 2, z); m.rotation.y = rnd() * 3;
-    scene.add(m);
-  }
+  lower.castShadow = upper.castShadow = true;
+  scene.add(lower, upper, trunks);
+  return {
+    setTreeCount(n) { lower.count = upper.count = trunks.count = Math.min(MAX_TREES, n); },
+  };
 }

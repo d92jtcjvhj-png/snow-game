@@ -25,6 +25,8 @@ export interface HudState {
   bigMsg: boolean;
   fps: number;
   tier: string;
+  /** draw calls of the last frame (debug) */
+  calls?: number;
   /** in the air: live trick text and compass (board vs travel, seen from above) */
   air: { text: string; compassDeg: number | null; upsideDown: boolean; tiltDeg?: number } | null;
 }
@@ -144,7 +146,7 @@ export function createHud(root: HTMLElement, assist: Assist, h: { onStart(): voi
       spd.textContent = String(Math.round(s.speed * MS_TO_KMH));
       const e = s.edge / DEG;
       edgeEl.textContent = !s.grounded ? '—' : Math.abs(e) < 4 ? 'piatta' : `${e > 0 ? 'heel' : 'toe'} ${Math.round(Math.abs(e))}°`;
-      if (frame++ % 15 === 0) dbg.textContent = `${Math.round(s.fps)} fps · ${s.tier}`;
+      if (frame++ % 15 === 0) dbg.textContent = `${Math.round(s.fps)} fps · ${s.tier}${s.calls ? ` · ${s.calls} dc` : ''}`;
       msg.textContent = s.msg; msg.classList.toggle('big', s.bigMsg);
       // second power on the stick itself: the % pushed (the max remembered during the charge) and a fill along the track
       const axP = s.grounded ? Math.max(0, (Math.abs(s.axis) - POP.AXIS_DEAD) / (1 - POP.AXIS_DEAD)) : 0;

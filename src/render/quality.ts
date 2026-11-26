@@ -8,7 +8,7 @@ export interface TierSettings {
 
 export const TIERS: Record<Tier, TierSettings> = {
   low: { maxPixelRatio: 1, shadows: false, shadowMapSize: 512 },
-  medium: { maxPixelRatio: 1.5, shadows: false, shadowMapSize: 1024 },
+  medium: { maxPixelRatio: 1.5, shadows: true, shadowMapSize: 1024 },
   high: { maxPixelRatio: 2, shadows: true, shadowMapSize: 2048 },
 };
 const ORDER: Tier[] = ['low', 'medium', 'high'];
@@ -25,13 +25,25 @@ export class QualityManager {
   private avgMs = 16;
   private slowT = 0;
   private fastT = 0;
+  /** `?q=low|medium|high` in the URL locks the tier (testing and comparisons) */
+  readonly locked: boolean;
 
   constructor(private readonly onChange: (tier: Tier, s: TierSettings) => void, initial = QualityManager.guess()) {
-    this.tier = initial;
+    const forced = QualityManager.forced();
+    this.locked = forced !== null;
+    this.tier = forced ?? initial;
+  }
+
+  static forced(): Tier | null {
+    if (typeof window === 'undefined') return null;
+    const q = new URLSearchParams(window.location.search).get('q');
+    return q === 'low' || q === 'medium' || q === 'high' ? q : null;
   }
 
   static guess(): Tier {
     if (typeof window === 'undefined') return 'medium';
+    const f = QualityManager.forced();
+    if (f) return f;
     const coarse = window.matchMedia?.('(pointer: coarse)').matches ?? false;
     const cores = navigator.hardwareConcurrency || 4;
     if (coarse) return cores >= 8 ? 'medium' : 'low';
@@ -45,6 +57,7 @@ export class QualityManager {
   /** Call once per rendered frame with the real frame time (s). */
   sample(dt: number): void {
     if (dt <= 0 || dt > 0.25) return; // ignore tab switches and pauses
+    if (this.locked) { this.avgMs += (dt * 1000 - this.avgMs) * 0.05; return; }
     this.avgMs += (dt * 1000 - this.avgMs) * 0.05;
     if (this.avgMs > SLOW_MS) { this.slowT += dt; this.fastT = 0; }
     else if (this.avgMs < FAST_MS) { this.fastT += dt; this.slowT = 0; }

@@ -4,7 +4,7 @@ Gioco di snowboard 3D per browser, PC e telefono. Stack: Vite + TypeScript stric
 
 ## Regole
 1. **`legacy/index.html` è sola lettura.** È il riferimento di comportamento (fisica, comandi, feeling). Non modificarlo mai.
-2. **Stile: 3D low-poly cartoon.** Flat shading, pochi poligoni, palette pastello (vedi `src/render/materials.ts`), niente texture realistiche. Materiali condivisi tramite `flat(color)`.
+2. **Stile: 3D stilizzato-realistico, originale** (ricerca 16). Neve con normali lisce analitiche da h(x, z) e materiale `snow` (`src/render/snow.ts`); luce del mattino, cielo e montagne in `src/render/sky.ts`. Alberi, rocce e montagne restano un po' sfaccettati, materiali condivisi `flat(color)`. Rider morbido (pelle unica in codice). Palette chiara, niente texture fotografiche. Non si copia l'aspetto di nessun gioco esistente.
 3. **Fisica realistica su misura.**
    - Rapier integra i corpi e gestisce le collisioni con gli oggetti.
    - **Il contatto con la neve è un vincolo nostro** sulla superficie analitica h(x, z) (`src/world/bigair.ts`), la stessa da cui nascono mesh e trimesh. Il contatto di Rapier sui triangoli perdeva energia a caso.
