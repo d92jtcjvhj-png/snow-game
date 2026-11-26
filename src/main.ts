@@ -7,7 +7,7 @@ import { initRapier } from './physics/world';
 import { FollowCamera } from './render/camera';
 import { Markers } from './render/markers';
 import { createRenderer } from './render/renderer';
-import { Rider } from './render/rider';
+import { Rider, type RiderOutcome } from './render/rider';
 import { Spray } from './render/spray';
 import { createControls } from './ui/controls';
 import { createHud, loadAssist } from './ui/hud';
@@ -18,6 +18,10 @@ import { buildScene } from './world/scene';
 import { buildTerrainGrid } from './world/terrain';
 
 /** which way the rider falls, from the landing cause */
+function landOutcome(o: string | undefined): RiderOutcome {
+  return o === 'hand' || o === 'twohands' || o === 'buttcheck' ? o : null;
+}
+
 function crashDir(cause: string | undefined): 'nose' | 'toe' | 'back' | 'side' {
   if (cause === 'pitchFwd' || cause === 'nose' || cause === 'knuckle' || cause === 'offpiste') return 'nose';
   if (cause === 'edge') return 'toe';
@@ -91,12 +95,17 @@ async function main() {
     else if (air && sp.mode === 'none') twist = -sp.shifty * 0.6 * DEG;
     rider.update({
       edge: b.grounded ? b.edge : 0,
-      crouch: air ? (sp.grabbing ? 1 : sp.opened ? 0 : 0.6) : charging ? 0.7 : Math.min(0.6, inp.brake),
+      brake: onGround ? inp.brake : 0,
+      charge: charging ? Math.abs(inp.charge) : 0,
       twist,
-      arms: charging ? Math.abs(inp.charge) : 0,
       airborne: !!air,
-      opened: !!air && sp.opened && !sp.grabbing,
-      grab: air ? sp.curGrab : null,
+      // in the air the pose comes from the physics springs (same values that set the inertia)
+      airT: air ? sp.airT : 0,
+      tuck: air ? sp.tuck : 0,
+      open: air ? sp.open : 0,
+      grab: air && sp.grabbing ? sp.shape : null,
+      outcome: landOutcome(run.landing?.outcome),
+      sinceLand: run.landing && run.phase !== 'air' ? run.sinceLanding() : 9,
       crash: run.phase === 'crash' || (run.phase === 'done' && run.landing?.quality === 'crash'),
       crashDir: crashDir(run.landing?.cause),
       absorb: run.landing && run.phase !== 'air' ? Math.min(1, run.landing.efh / 2.5) * Math.max(0, 1 - run.sinceLanding() / 0.3) : 0,

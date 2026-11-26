@@ -1,9 +1,18 @@
-import { DEG, POP, SPIN } from '../core/config';
+import { DEG, GRAB_K, POP, SPIN } from '../core/config';
 import { qAxis, qMul, qRot, type Q4 } from './vec';
 
-/** Grab buttons (compact grabs: they all tuck the rider and speed the spin up). */
-export type GrabId = 'nose' | 'mute' | 'indy' | 'tail';
-export const GRAB_NAME: Record<GrabId, string> = { nose: 'Nose', mute: 'Mute', indy: 'Indy', tail: 'Tail' };
+/**
+ * Grabs (docs/research 15). Today the buttons are Nose, Mute, Indy, Tail; the others are ready in
+ * GRAB_K with their effect on the spin and flip inertia.
+ */
+export type GrabId = keyof typeof GRAB_K;
+export const GRAB_NAME: Record<GrabId, string> = {
+  truckdriver: 'Truck Driver', indy: 'Indy', mute: 'Mute', japan: 'Japan', melon: 'Melon', taipan: 'Taipan',
+  roastbeef: 'Roast Beef', chickensalad: 'Chicken Salad', stalefish: 'Stalefish', nose: 'Nose', tail: 'Tail',
+  seatbelt: 'Seatbelt', nuclear: 'Nuclear', tindy: 'Tindy', tailfish: 'Tailfish', rocket: 'Rocket',
+  bloodydracula: 'Bloody Dracula', crail: 'Crail', canadianbacon: 'Canadian Bacon', tweak: 'Tweak', poke: 'Poke',
+  method: 'Method', slob: 'Slob', lien: 'Lien', stiffy: 'Stiffy',
+};
 
 export type SpinMode = 'none' | 'spin' | 'flip';
 export type TiltType = 'flat' | 'cork' | 'misty' | 'rodeo';
@@ -11,8 +20,10 @@ export type TiltType = 'flat' | 'cork' | 'misty' | 'rodeo';
 /**
  * Rotation in the air, in the board's takeoff frame (x = heel side, y = up, z = nose).
  * Ported from the legacy SIM (initSpin / stepAir / airQuat) with angular-momentum physics and TWO
- * powers: the spin (left thumb, L) and the off-axis push (stick, L_f). ω = L / I(pose) for both;
- * the off-axis flip starts at the pop together with the spin: one fluid rotation about a tilted axis.
+ * powers: the spin (left thumb, L) and the off-axis push (stick, L_f). ω = L / I(pose) on each axis,
+ * with separate spin and flip inertias (docs/research 15); the off-axis flip starts at the pop together
+ * with the spin: one fluid rotation about a tilted axis. The pose (tuck, open) moves on critically
+ * damped springs, so the speed-up comes while the body closes, and the animation reads the same values.
  */
 export interface SpinState {
   mode: SpinMode;
@@ -53,6 +64,13 @@ export interface SpinState {
   axis: number;
   /** current spin rate (°/s) */
   omega: number;
+  /** pose 0..1 on critically damped springs: tuck (hand on the board) and open (arms out), with velocities */
+  tuck: number;
+  tuckV: number;
+  open: number;
+  openV: number;
+  /** grab whose shape the tuck is in (kept while letting go) */
+  shape: GrabId | null;
 }
 
 export interface SpinInput {
@@ -72,7 +90,7 @@ export function initSpin(power: number, dir: number, axis: number, popQ: number,
     mode: 'none', dir: 0, L: 0, phi: 0, theta: 0, tiltType: 'flat', tiltSgn: 0, Lf: 0, axisPower: 0, tilt: 0, flipDone: false,
     shifty: 0, maxShifty: 0, parked: 0, stall: 0, stalled: false, inv: 0, wasInv: false, airT: 0,
     apex: false, opened: false, grabbing: false, everGrabbed: false, curGrab: null, grabTimes: {},
-    power, axis, omega: 0,
+    power, axis, omega: 0, tuck: 0, tuckV: 0, open: 0, openV: 0, shape: null,
   };
   const qf = 0.55 + 0.45 * popQ;
   const ay = Math.abs(axis);
@@ -80,7 +98,7 @@ export function initSpin(power: number, dir: number, axis: number, popQ: number,
     if (ay >= POP.AXIS_DEAD) {
       sp.mode = 'flip';
       sp.dir = axis > 0 ? 1 : -1;
-      sp.L = ay * SPIN.FLIP_MAX * qf * SPIN.I_NEUTRAL;
+      sp.L = ay * SPIN.FLIP_MAX * qf * SPIN.IF_NEUTRAL;
     }
     return sp;
   }
@@ -94,9 +112,24 @@ export function initSpin(power: number, dir: number, axis: number, popQ: number,
     sp.tiltSgn = up ? 1 : -1;
     sp.tiltType = up ? 'cork' : sp.dir > 0 ? 'misty' : 'rodeo';
     sp.axisPower = a;
-    sp.Lf = (SPIN.OFF_MIN + (1 - SPIN.OFF_MIN) * a) * SPIN.OFF_MAX * qf * SPIN.I_NEUTRAL;
+    sp.Lf = (SPIN.OFF_MIN + (1 - SPIN.OFF_MIN) * a) * SPIN.OFF_MAX * qf * SPIN.IF_NEUTRAL;
   }
   return sp;
+}
+
+/** exact critically damped spring step (no overshoot, deterministic at the fixed step) */
+function spring(x: number, v: number, target: number, wn: number, dt: number): [number, number] {
+  const e = Math.exp(-wn * dt), d = x - target, b = v + wn * d;
+  return [target + (d + b * dt) * e, (v - wn * b * dt) * e];
+}
+
+/** Moments of inertia now (kg·m²), from the pose springs: spin axis and flip axis. */
+export function poseInertia(sp: SpinState): { spin: number; flip: number } {
+  const g = sp.shape ? GRAB_K[sp.shape] : { spin: 1, flip: 1 };
+  const free = sp.open * (1 - sp.tuck);
+  const kS = 1 + sp.tuck * (g.spin - 1) + free * (SPIN.K_OPEN_SPIN - 1);
+  const kF = 1 + sp.tuck * (g.flip - 1) + free * (SPIN.K_OPEN_FLIP - 1);
+  return { spin: SPIN.I_NEUTRAL * kS, flip: SPIN.IF_NEUTRAL * kF };
 }
 
 const rampIn = (t: number) => { const u = Math.min(1, t / SPIN.RAMP_IN); return 0.3 + 0.7 * u * u * (3 - 2 * u); };
@@ -105,19 +138,22 @@ const sgn = (v: number) => (v > 0 ? 1 : v < 0 ? -1 : 0);
 /** One step in the air. `vy` vertical velocity (for the apex). */
 export function stepSpin(sp: SpinState, inp: SpinInput, vy: number, dt: number): void {
   sp.airT += dt;
-  // pose
+  // pose: the grab button starts the tuck; the hand is on the board (grab counted) once the tuck is deep
   const grabbing = !!inp.grab;
   if (grabbing) {
     sp.everGrabbed = true;
-    sp.curGrab = inp.grab;
-    sp.grabTimes[inp.grab!] = (sp.grabTimes[inp.grab!] ?? 0) + dt;
+    if (inp.grab !== sp.shape && sp.tuck < SPIN.TUCK_GRAB) sp.shape = inp.grab;
+    sp.curGrab = sp.tuck >= SPIN.TUCK_GRAB ? sp.shape : null;
+    if (sp.curGrab) sp.grabTimes[sp.curGrab] = (sp.grabTimes[sp.curGrab] ?? 0) + dt;
   } else {
     if (sp.grabbing) sp.opened = true; // letting go = opening up
     sp.curGrab = null;
   }
   sp.grabbing = grabbing;
   if (!sp.apex && vy <= 0) { sp.apex = true; if (!sp.everGrabbed) sp.opened = true; }
-  const I = grabbing ? SPIN.I_TUCK : sp.opened ? SPIN.I_OPEN : SPIN.I_NEUTRAL;
+  [sp.tuck, sp.tuckV] = spring(sp.tuck, sp.tuckV, grabbing ? 1 : 0, SPIN.TUCK_WN, dt);
+  [sp.open, sp.openV] = spring(sp.open, sp.openV, sp.opened && !grabbing ? 1 : 0, SPIN.OPEN_WN, dt);
+  const In = poseInertia(sp), I = In.spin, IF = In.flip;
   const b = inp.held ? inp.bar : 0;
 
   if (sp.mode === 'spin') {
@@ -139,7 +175,7 @@ export function stepSpin(sp: SpinState, inp: SpinInput, vy: number, dt: number):
     // tilted axis, docs/research 12: the axis is set at takeoff), ω_f = L_f / I(pose).
     // Opened up, within SPOT_WINDOW of a whole flip, the rider spots the landing and closes it.
     if (sp.tiltType !== 'flat' && !sp.flipDone) {
-      let wf = (sp.Lf / I) * rampIn(sp.airT);
+      let wf = (sp.Lf / IF) * rampIn(sp.airT);
       const a = Math.abs(sp.theta), next = Math.ceil(a / 360 - 1e-9) * 360, rem = next - a;
       if (sp.opened && !grabbing && a > 90 && rem < SPIN.SPOT_WINDOW) {
         wf = Math.max(wf, SPIN.LEVEL_RATE);
@@ -149,7 +185,7 @@ export function stepSpin(sp: SpinState, inp: SpinInput, vy: number, dt: number):
       sp.tilt = Math.abs(((Math.abs(sp.theta) + 180) % 360) - 180);
     }
   } else if (sp.mode === 'flip') {
-    const w = (sp.L / I) * rampIn(sp.airT);
+    const w = (sp.L / IF) * rampIn(sp.airT);
     sp.theta += sp.dir * w * dt;
     sp.omega = w;
   } else {
