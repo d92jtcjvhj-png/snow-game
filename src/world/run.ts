@@ -121,6 +121,8 @@ export class Run {
   private takeoffPitch = 0;
   /** training: landing tolerance ×1.7 */
   tolerance = false;
+  /** off-axis stick value held during the charge */
+  private axisLatched = 0;
   /** the set-up line was interrupted by a speed check */
   lineBroken = false;
 
@@ -162,7 +164,10 @@ export class Run {
 
     if (this.phase === 'ride') {
       const beforeLip = p0.z < LM.zLip;
-      if (pressed && beforeLip && !this.pending) { this.chargeOn = true; this.note = ''; this.lineBroken = false; }
+      if (pressed && beforeLip && !this.pending) { this.chargeOn = true; this.note = ''; this.lineBroken = false; this.axisLatched = 0; }
+      // the off-axis stick is remembered for the whole charge (it used to be read only at the instant of
+      // the release: a stick let go a moment earlier turned corks into flat spins and flips into straight airs)
+      if (this.chargeOn && Math.abs(inp.axis) >= POP.AXIS_DEAD) this.axisLatched = inp.axis;
       if (this.chargeOn && held) {
         this.power = Math.abs(inp.charge) >= POP.DEAD ? Math.round(Math.abs(inp.charge) / POP.STEP) * POP.STEP : 0;
         // the set-up carve starts as soon as the charge has a side
@@ -184,7 +189,7 @@ export class Run {
           const vz = Math.max(1, b.velocity().z);
           const tLip = (LM.zLip - p0.z) / vz;
           const q = tLip <= POP.WINDOW ? 1 : Math.max(0.25, 1 - (tLip - POP.WINDOW) / 0.5);
-          this.pending = { q, power: this.power, axis: inp.axis };
+          this.pending = { q, power: this.power, axis: this.axisLatched };
           this.kind = kind;
         }
       }
@@ -222,7 +227,8 @@ export class Run {
   private trickKind(inp: RunInput): TrickKind {
     if (this.approach.side > 0) return 'frontside';
     if (this.approach.side < 0) return 'backside';
-    return Math.abs(inp.axis) >= POP.AXIS_DEAD ? 'flip' : 'straight';
+    void inp;
+    return Math.abs(this.axisLatched) >= POP.AXIS_DEAD ? 'flip' : 'straight';
   }
 
   private launch(inp: RunInput): void {
@@ -245,7 +251,7 @@ export class Run {
     this.takeoff = {
       kind,
       power: this.pending ? this.pending.power : this.power,
-      axis: this.pending ? this.pending.axis : inp.axis,
+      axis: this.pending ? this.pending.axis : this.axisLatched,
       speed: len(vel),
       popQ: q * edgeQ,
       release: this.pending ? (this.pending.q >= 1 ? 'perfetto' : 'presto') : this.chargeOn ? 'nessuno' : 'nessuno',

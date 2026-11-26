@@ -13,6 +13,11 @@ describe('trick names', () => {
     sp.phi = -1075; sp.inv = 2;
     expect(trickName(sp, false).name).toBe('Backside Double Cork 1080');
   });
+  it('inversions in the name are capped at rotations − 1 (pros rule)', () => {
+    const sp = initSpin(1, 1, 1, 1, null);
+    sp.phi = 2140; sp.inv = 6;
+    expect(trickName(sp, false).name).toBe('Frontside Quint Cork 2160');
+  });
   it('switch directions: Cab and Switch Backside', () => {
     const fs = initSpin(0.4, 1, 0, 1, null); fs.phi = 540;
     const bs = initSpin(0.4, -1, 0, 1, null); bs.phi = -360;
