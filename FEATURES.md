@@ -146,9 +146,13 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
   - **Neve**: normali lisce calcolate dalla superficie h(x, z) (niente più sfaccettature), occlusione del cielo cotta nei colori (piedi del kicker e conche più scure e azzurre), albedo mai bianco puro (pista appena calda, neve fresca fuori pista più fredda, kicker azzurrino); luce che avvolge un po' oltre il terminatore (finto scattering) e grana fine (tutti i livelli); **segni del gatto** lungo la linea di massima pendenza con le giunte delle passate ogni 4 m e **scintillio** di grani al sole vicino alla camera (medium e high). Testato in Vitest.
   - **Cielo** sfumato dal blu intenso allo zenit al chiaro dell'orizzonte, con disco e alone del sole; nebbia dello stesso colore dell'orizzonte; **tre anelli di montagne** lontane sempre più chiare nella foschia, con la neve sopra una linea frastagliata (tutti i livelli).
   - **Ombre** anche in qualità media (1024), alta 2048; corretto il tipo di ombra (three r187 aveva tolto quello morbido).
-  - **Alberi e bandierine istanziati**: le chiamate di disegno scendono da ~435 a ~70 in qualità media (visibili nel riquadro fps); pini a due coni con verdi diversi.
+  - **Alberi e bandierine istanziati**: le chiamate di disegno scendono da ~435 a ~45 (visibili nel riquadro fps).
+  - **Pini** a tre palchi sfaccettati con **chiazze di neve sui rami**, tronco, taglia e tinta variabili; un'unica mesh istanziata (90 / 150 / 220 per livello).
+  - **Rocce** sfaccettate con la neve sulle facce rivolte in alto, solo fuori pista dove il pendio supera 28°, mezze sepolte (tutti i livelli).
+  - **Tracce della tavola**: nastro azzurrino sulla neve, sottile dove la lamina incide e largo quanto la tavola spazza in derapata e nello speed check; si interrompe nei salti (segmenti 150 / 350 / 600 per livello).
+  - **Spruzzi** morbidi e rotondi (disegnati nello shader, niente texture) che crescono e svaniscono, frenati dall'aria; **sbuffo di neve all'atterraggio** grande quanto l'impatto (particelle 60 / 150 / 260 per livello).
   - `?q=low|medium|high` nell'indirizzo blocca il livello di qualità (prove e confronti).
-  - ❌ Pini e rocce nuovi con neve sopra, particelle, tracce della tavola (terzo blocco); nebbia d'altezza; bloom.
+  - ❌ Nebbia d'altezza, bloom, neve che cade.
 - ✅ **Rider morbido** (ricerche 14 e 16, secondo blocco grafico): **una pelle unica** generata in codice (SkinnedMesh, ~1,3k triangoli) che si piega in modo continuo a ginocchia, gomiti e vita, mossa dalle stesse ossa dell'IK; pantaloni larghi che si allargano sugli scarponi, giacca imbottita con orlo e polsini scuri; normali saldate alle giunture (niente cuciture). Proporzioni reali (H 1,76 m, Drillis & Contini). Testata in Vitest (pesi, giunture, determinismo).
   - Parti rigide morbide: casco rosso, maschera arancione con cinghia, sottocasco scuro, guanti, scarponi e highback arrotondati su attacchi a papera +15/−15.
   - **Tavola vera**: sagoma dalla sidecut di 8 m (vita 25 cm, ~2 cm di sciancratura per lato), punte arrotondate e rialzate, top giallo (nose) e viola (tail), soletta e lamine scure.
@@ -158,14 +162,13 @@ Le ricerche su cui si basa la fisica sono in `docs/research/`.
   - Testa che guarda sopra la spalla anteriore e tiene lo sguardo a livello; piccolo movimento delle mani in scivolata.
   - Si inclina con la lamina (angolazione: un po' meno della tavola) e cade nel verso della causa.
   - ❌ Spalla che scende nello stacco fuori asse, tweak e poke, reazioni diverse per edge catch di punta e di tallone oltre al ribaltamento.
-- ✅ Spruzzo di neve in derapata e nello speed check; il numero di particelle dipende dalla qualità.
 - ✅ Kicker leggermente azzurro, linea blu sul labbro, linea rossa sul knuckle, tacche ogni 5 m.
 - ✅ Bordi blu dell'atterraggio, bandierine, reti arancioni, cancello di partenza.
 - ✅ Camera laterale sul lato punta, un po' dietro, come nel legacy: si leggono bene lamina e inclinazione. **Inquadratura rigida**: stessa posizione rispetto al rider a terra e in volo, mira esattamente su di lui e lo segue quasi senza ritardo, così durante il salto l'inquadratura non oscilla. Resta sempre almeno 2 m sopra la neve.
 - ✅ **Qualità adattiva**:
   - livelli low / medium / high: pixel ratio 1 / 1,5 / 2; ombre medium 1024 e high 2048; segni del gatto e scintillio da medium; alberi 90 / 150 / 220; particelle 60 / 150 / 260;
   - scende se il frame resta > 20 ms per 2 s, sale se resta < 12 ms per 5 s.
-- ❌ Tracce sulla neve, effetti in aria.
+- ❌ Effetti in aria (scie, neve che cade).
 
 ## A8. Interfaccia e allenamento
 - ✅ Intro con i comandi, HUD (km/h, lamina heel/toe con gradi, fps e qualità), barra di carica con "Frontside 80% · stacco di tallone".

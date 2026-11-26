@@ -11,6 +11,7 @@ import { createSky } from './render/sky';
 import { createSnowMaterial } from './render/snow';
 import { Rider, type RiderOutcome } from './render/rider';
 import { Spray } from './render/spray';
+import { Trails } from './render/trails';
 import { createControls } from './ui/controls';
 import { createHud, loadAssist } from './ui/hud';
 import './ui/style.css';
@@ -50,6 +51,9 @@ async function main() {
   gfx.scene.add(rider.root);
   const spray = new Spray(260);
   gfx.scene.add(spray.points);
+  const trails = new Trails(heightAt, 600);
+  gfx.scene.add(trails.mesh);
+  let wasAir = false;
   const markers = new Markers(gfx.scene);
   const cam = new FollowCamera(heightAt);
   const assist = loadAssist();
@@ -59,7 +63,7 @@ async function main() {
   let started = false, cardShown = false;
   let inp: RunInput = { charging: false, charge: 0, axis: 0, brake: 0 };
   const loop = new FixedLoop((dt) => run.step(inp, dt));
-  const restart = () => { run.reset(); loop.reset(); cam.snap(); cardShown = false; hud.hideCard(); };
+  const restart = () => { run.reset(); loop.reset(); cam.snap(); trails.reset(); cardShown = false; hud.hideCard(); };
   const hud = createHud(hudRoot, assist, {
     onStart() { started = true; restart(); },
     onRetry() { restart(); },
@@ -122,11 +126,23 @@ async function main() {
     const bv = b.velocity();
     // snow spray when skidding / speed check
     spray.budget = gfx.quality.tier === 'low' ? 60 : gfx.quality.tier === 'medium' ? 150 : 260;
+    trails.budget = gfx.quality.tier === 'low' ? 150 : gfx.quality.tier === 'medium' ? 350 : 600;
+    spray.setViewHeight(gfx.renderer.domElement.height);
+    const inAir = run.phase === 'air';
+    // board tracks: narrow where the edge carves, as wide as the board sweeps when it skids
+    if (b.grounded && !inAir && b.speed() > 1.5) {
+      const sp = Math.hypot(bv.x, bv.z) || 1, dx = bv.x / sp, dz = bv.z / sp;
+      const skid = Math.abs(Math.sin(b.psi - Math.atan2(bv.x, bv.z)));
+      trails.add(pos.x, pos.z, dx, dz, 0.09 + BOARD.LENGTH * 0.8 * skid);
+    } else trails.lift();
+    // landing puff, sized by the impact
+    if (wasAir && !inAir && run.landing) spray.burst(pos.x, pos.y, pos.z, bv.x, bv.z, Math.min(1, run.landing.efh / 2.5));
+    wasAir = inAir;
     if (b.grounded && (b.skidding || inp.brake > 0.05) && b.speed() > 3) {
       const v = b.velocity(), nE = Math.min(6, Math.round(b.speed() * 0.3 * Math.max(inp.brake, 0.4)));
       for (let i = 0; i < nE; i++) {
         const a = (Math.random() - 0.5) * 1.4;
-        spray.emit(pos.x + a * Math.sin(b.psi), pos.y, pos.z + a * Math.cos(b.psi), v.x * 0.6 + (Math.random() - 0.3) * 3, 1 + Math.random() * 2.5, v.z * 0.6 + Math.random());
+        spray.emit(pos.x + a * Math.sin(b.psi), pos.y + 0.15, pos.z + a * Math.cos(b.psi), v.x * 0.6 + (Math.random() - 0.3) * 3, 1 + Math.random() * 2.5, v.z * 0.6 + Math.random());
       }
     }
     spray.update(real);
