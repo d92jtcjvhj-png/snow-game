@@ -7,12 +7,14 @@ import { initRapier } from './physics/world';
 import { FollowCamera } from './render/camera';
 import { Markers } from './render/markers';
 import { createRenderer } from './render/renderer';
+import { createSky } from './render/sky';
+import { createSnowMaterial } from './render/snow';
 import { Rider, type RiderOutcome } from './render/rider';
 import { Spray } from './render/spray';
 import { createControls } from './ui/controls';
 import { createHud, loadAssist } from './ui/hud';
 import './ui/style.css';
-import { BA, LM, heightAt, pitchAt } from './world/bigair';
+import { BA, LM, baseY, heightAt, pitchAt } from './world/bigair';
 import { Run, type RunInput } from './world/run';
 import { buildScene } from './world/scene';
 import { buildTerrainGrid } from './world/terrain';
@@ -35,8 +37,14 @@ async function main() {
   const R = await initRapier();
   const gfx = createRenderer(canvas);
   const grid = buildTerrainGrid();
-  const tier = gfx.quality.tier;
-  buildScene(gfx.scene, grid, tier === 'low' ? 90 : tier === 'medium' ? 150 : 220);
+  const snow = createSnowMaterial(gfx.quality.tier);
+  snow.sunDir.copy(gfx.sunDir);
+  const world = buildScene(gfx.scene, grid, snow.material);
+  const sky = createSky(gfx.sunDir, new THREE.Vector3(0, baseY(LM.zKnuckle), LM.zKnuckle));
+  gfx.scene.add(sky.group);
+  const onTier = (t: 'low' | 'medium' | 'high') => { snow.setTier(t); world.setTreeCount(t === 'low' ? 90 : t === 'medium' ? 150 : 220); };
+  gfx.onTier.push(onTier);
+  onTier(gfx.quality.tier);
   const run = new Run(R, grid);
   const rider = new Rider();
   gfx.scene.add(rider.root);
@@ -162,7 +170,8 @@ async function main() {
       }
     }
     run.tolerance = assist.tolerance;
-    hud.update({ speed: b.speed(), edge: b.edge, grounded: b.grounded && run.phase !== 'air', charging, charge: inp.charge, axis: run.axisLatched || inp.axis, msg, bigMsg: big, fps: 1000 / gfx.quality.frameMs, tier: gfx.quality.tier, air: airHud });
+    hud.update({ speed: b.speed(), edge: b.edge, grounded: b.grounded && run.phase !== 'air', charging, charge: inp.charge, axis: run.axisLatched || inp.axis, msg, bigMsg: big, fps: 1000 / gfx.quality.frameMs, tier: gfx.quality.tier, calls: gfx.renderer.info.render.calls, air: airHud });
+    sky.update(cam.camera);
     gfx.renderer.render(gfx.scene, cam.camera);
   });
 

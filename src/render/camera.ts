@@ -5,7 +5,7 @@ import * as THREE from 'three';
  * read clearly. It always aims at the rider, on the snow and in the air.
  */
 export class FollowCamera {
-  readonly camera = new THREE.PerspectiveCamera(62, 1, 0.1, 1200);
+  readonly camera = new THREE.PerspectiveCamera(62, 1, 0.1, 1700);
   private readonly pos = new THREE.Vector3();
   private readonly look = new THREE.Vector3();
   private readonly want = new THREE.Vector3();

@@ -1,12 +1,16 @@
 import * as THREE from 'three';
-import { PALETTE } from './materials';
 import { QualityManager, type Tier, type TierSettings } from './quality';
+import { SKY } from './sky';
 
 export interface Renderer {
   renderer: THREE.WebGLRenderer;
   scene: THREE.Scene;
   sun: THREE.DirectionalLight;
   quality: QualityManager;
+  /** direction towards the sun (world, unit): shared with the sky and the snow shader */
+  sunDir: THREE.Vector3;
+  /** called after every quality change (materials with per-tier variants) */
+  onTier: ((t: Tier) => void)[];
   resize(camera: THREE.PerspectiveCamera): void;
   /** Keep the sun's shadow box centred on a point (the cube / the rider). */
   follow(target: THREE.Vector3): void;
@@ -15,21 +19,30 @@ export interface Renderer {
 export function createRenderer(canvas: HTMLCanvasElement): Renderer {
   const initial = QualityManager.guess();
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: initial !== 'low', powerPreference: 'high-performance' });
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  // r187 removed PCFSoftShadowMap (it fell back to PCF with a warning)
+  renderer.shadowMap.type = THREE.PCFShadowMap;
+  // tone mapping (docs/research 16): Neutral keeps the pastel hues and lets bright snow roll off instead of clipping
+  renderer.toneMapping = THREE.NeutralToneMapping;
+  renderer.toneMappingExposure = 1.18;
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(PALETTE.sky);
-  scene.fog = new THREE.Fog(PALETTE.fog, 70, 320);
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x7f97b2, 1.6));
-  const sun = new THREE.DirectionalLight(0xfff1dc, 2.2);
-  sun.position.set(-20, 40, -15);
+  scene.background = new THREE.Color(SKY.horizon);
+  scene.fog = new THREE.Fog(SKY.horizon, 90, 420);
+  // clear morning: low warm sun from the downhill side, three-quarters to the side camera (never behind it);
+  // the sky fills the shadows with blue, the snow bounces a bright neutral light from below
+  const sunDir = new THREE.Vector3(0.38, 0.5, 0.78).normalize();
+  scene.add(new THREE.HemisphereLight(0x9fc3f0, 0xdfe7f0, 1.2));
+  const sun = new THREE.DirectionalLight(0xfff0dc, 2.8);
+  sun.position.copy(sunDir).multiplyScalar(60);
   const sc = sun.shadow.camera;
-  sc.left = sc.bottom = -20; sc.right = sc.top = 20; sc.near = 1; sc.far = 120;
-  sun.shadow.bias = -0.0005;
+  sc.left = sc.bottom = -18; sc.right = sc.top = 18; sc.near = 1; sc.far = 140;
+  sun.shadow.bias = -0.0004;
+  sun.shadow.normalBias = 0.02;
   scene.add(sun, sun.target);
+  const onTier: ((t: Tier) => void)[] = [];
 
   let lastCam: THREE.PerspectiveCamera | null = null;
-  const apply = (_t: Tier, s: TierSettings) => {
+  const apply = (t: Tier, s: TierSettings) => {
     renderer.setPixelRatio(Math.min(s.maxPixelRatio, window.devicePixelRatio || 1));
     renderer.shadowMap.enabled = s.shadows;
     sun.castShadow = s.shadows;
@@ -39,6 +52,7 @@ export function createRenderer(canvas: HTMLCanvasElement): Renderer {
     // materials must recompile when shadows are toggled
     scene.traverse((o) => { if (o instanceof THREE.Mesh) (o.material as THREE.Material).needsUpdate = true; });
     if (lastCam) resize(lastCam);
+    for (const f of onTier) f(t);
   };
   const quality = new QualityManager(apply, initial);
 
@@ -52,9 +66,9 @@ export function createRenderer(canvas: HTMLCanvasElement): Renderer {
 
   apply(quality.tier, quality.settings);
 
-  const offset = new THREE.Vector3(-20, 40, -15);
+  const offset = sunDir.clone().multiplyScalar(60);
   return {
-    renderer, scene, sun, quality, resize,
+    renderer, scene, sun, quality, resize, sunDir, onTier,
     follow(target) {
       sun.target.position.copy(target);
       sun.position.copy(target).add(offset);
